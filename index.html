@@ -37,8 +37,16 @@ button,input{font-family:inherit}
 #view>.show{opacity:1}
 @media (prefers-reduced-motion:reduce){#view>img,#view>video{transition:none}}
 [hidden]{display:none!important}
-#play{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);z-index:3;width:52px;height:52px;display:flex;align-items:center;justify-content:center;padding:0;border-radius:50%;cursor:pointer;color:#fff;background:linear-gradient(135deg,#ffffff4d,#ffffff14);-webkit-backdrop-filter:blur(16px) saturate(170%);backdrop-filter:blur(16px) saturate(170%);border:1px solid #ffffff59;box-shadow:inset 0 1px 0 #ffffff99,inset 0 -1px 0 #ffffff26,0 6px 18px #0005}
+#play,#save,#reset{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);z-index:3;width:52px;height:52px;display:flex;align-items:center;justify-content:center;padding:0;border-radius:50%;cursor:pointer;color:#fff;background:linear-gradient(135deg,#ffffff4d,#ffffff14);-webkit-backdrop-filter:blur(16px) saturate(170%);backdrop-filter:blur(16px) saturate(170%);border:1px solid #ffffff59;box-shadow:inset 0 1px 0 #ffffff99,inset 0 -1px 0 #ffffff26,0 6px 18px #0005}
 #play svg{width:24px;height:24px;fill:currentColor}
+#play{width:56px;height:56px}
+#save,#reset{width:44px;height:44px;bottom:30px;transform:none}
+#save{left:calc(50% - 90px)}
+#reset{left:calc(50% + 46px)}
+#save svg,#reset svg{width:24px;height:24px}
+#save span{display:none;font-size:13px;font-weight:600}
+#save.busy svg,#save.ready svg{display:none}
+#save.busy span,#save.ready span{display:inline}
 #empty{color:var(--ink);font-size:14px;text-align:center;padding:20px}
 </style>
 </head>
@@ -62,7 +70,7 @@ button,input{font-family:inherit}
       <div id="ytp"></div>
     </div>
   </div>
-  <div id="view"><div id="empty">+ 버튼이나 빈 원을 눌러<br>사진·영상을 넣어보세요 (최대 12개)</div><button id="add" aria-label="사진·영상 추가">+</button><button id="play" aria-label="슬라이드쇼 재생/정지" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button></div>
+  <div id="view"><div id="empty">+ 버튼이나 빈 원을 눌러<br>사진·영상을 넣어보세요 (최대 12개)</div><button id="add" aria-label="사진·영상 추가">+</button><button id="play" aria-label="슬라이드쇼 재생/정지" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button><button id="reset" aria-label="처음으로 되돌리기" hidden><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5.07167 8C5.80935 6.72229 6.88601 5.67345 8.1826 4.96946C9.47919 4.26547 10.9452 3.93375 12.4186 4.01097C13.8919 4.08818 15.3152 4.57133 16.5311 5.40699C17.747 6.24266 18.7081 7.39828 19.3082 8.74611M3.23169 5.51537L3.9611 8.6749C4.08534 9.21303 4.62229 9.54856 5.16042 9.42433L8.31996 8.69492M18.9281 15.9999C18.1904 17.2776 17.1138 18.3264 15.8172 19.0304C14.5206 19.7344 13.0546 20.0661 11.5812 19.9889C10.1079 19.9117 8.68456 19.4286 7.46866 18.5929C6.25276 17.7572 5.29164 16.6016 4.69155 15.2538M20.7681 18.4845L20.0387 15.325C19.9144 14.7869 19.3775 14.4513 18.8394 14.5756L15.6798 15.305" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button><button id="save" class="" aria-label="슬라이드쇼를 영상으로 저장" hidden><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 8L7 8C4.79086 8 3 9.79086 3 12L3 17C3 19.2091 4.79086 21 7 21L19 21C21.2091 21 23 19.2091 23 17L23 12C23 9.79086 21.2091 8 19 8L17 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M10 13L12.2929 15.2929C12.6834 15.6834 13.3166 15.6834 13.7071 15.2929L16 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M13 15L13 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span></span></button></div>
 </div>
 
 <script>
@@ -93,7 +101,7 @@ function show(i){
   sel=i; clearTimeout(timer);
   // 이전 사진은 서서히 사라진 뒤 제거 (크로스페이드)
   view.querySelectorAll('img,video').forEach(e=>{e.onended=e.onerror=null;e.classList.remove('show');setTimeout(()=>e.remove(),1800)});
-  $('empty').style.display=items.length?'none':''; $('add').hidden=items.length>0; $('play').hidden=!items.length;
+  $('empty').style.display=items.length?'none':''; $('add').hidden=items.length>0; $('play').hidden=$('save').hidden=$('reset').hidden=!items.length;
   const it=items[i], m=document.createElement(it.video?'video':'img'); m.src=it.url;
   if(it.video){
     m.muted=true;m.autoplay=true;m.playsInline=true;m.play().catch(()=>{});  // 영상 소리는 항상 음소거
@@ -105,6 +113,64 @@ $('play').onclick=()=>{
   slide=!slide; clearTimeout(timer);
   $('play').querySelector('path').setAttribute('d',slide?'M6 5h4v14H6zM14 5h4v14h-4z':'M8 5v14l11-7z');
   if(slide&&!items[sel].video)timer=setTimeout(next,4000);
+};
+/* ---------- 슬라이드쇼를 영상으로 저장 (무음: YouTube 음악은 녹화할 수 없음) ---------- */
+const SLIDE=4000, FADE=1800;   // 재생 화면과 같은 간격·전환 시간
+let saveFile=null, saving=false;
+const setSave=(cls,txt='')=>{$('save').className=cls;$('save').querySelector('span').textContent=txt};
+async function record(){
+  const W=720, H=Math.round(W*view.clientHeight/view.clientWidth/2)*2;
+  const c=document.createElement('canvas'), p=document.createElement('canvas');
+  c.width=p.width=W; c.height=p.height=H;
+  const x=c.getContext('2d'), px=p.getContext('2d');
+  const mime=['video/mp4;codecs=avc1','video/mp4','video/webm;codecs=vp9','video/webm'].find(t=>MediaRecorder.isTypeSupported(t))||'';
+  const rec=new MediaRecorder(c.captureStream(30),mime?{mimeType:mime,videoBitsPerSecond:4e6}:{}), chunks=[];
+  rec.ondataavailable=e=>e.data.size&&chunks.push(e.data);
+  const stopped=new Promise(r=>rec.onstop=r);
+  x.fillStyle='#000'; x.fillRect(0,0,W,H); rec.start();
+  const list=items.slice();
+  for(let i=0;i<list.length;i++){
+    setSave('busy',(i+1)+'/'+list.length);
+    const it=list[i], el=it.video?document.createElement('video'):new Image();
+    el.src=it.url;
+    if(it.video){el.muted=true;el.playsInline=true;Object.assign(el.style,{position:'fixed',opacity:0,width:'1px',height:'1px',pointerEvents:'none'});document.body.append(el);await el.play()}
+    else await el.decode();
+    const w0=it.video?el.videoWidth:el.naturalWidth, h0=it.video?el.videoHeight:el.naturalHeight, k=Math.max(W/w0,H/h0), dw=w0*k, dh=h0*k, t0=performance.now();
+    await new Promise(res=>(function f(t){
+      const e=t-t0;
+      if(i)x.drawImage(p,0,0);                       // 이전 장면 위에 새 장면을 서서히 겹침
+      x.globalAlpha=i?Math.min(1,e/FADE):1; x.drawImage(el,(W-dw)/2,(H-dh)/2,dw,dh); x.globalAlpha=1;
+      (it.video?el.ended||e>6e4:e>=SLIDE)?res():requestAnimationFrame(f);   // shortcut: 영상은 최대 60초까지, 더 길면 필요할 때 늘리기
+    })(t0));
+    px.drawImage(c,0,0); el.remove();
+  }
+  await new Promise(r=>setTimeout(r,300)); rec.stop(); await stopped;
+  const type=(mime||'video/webm').split(';')[0];
+  return new File([new Blob(chunks,{type})],'photoLP.'+(type.includes('mp4')?'mp4':'webm'),{type});
+}
+$('save').onclick=async()=>{
+  if(saving)return;
+  if(saveFile){   // 두 번째 탭: 공유창(모바일은 '비디오 저장' → 사진 앱) 또는 다운로드. 사용자 탭이 있어야 공유창이 열려서 녹화와 분리
+    const f=saveFile;
+    try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});saveFile=null;setSave('');return}}
+    catch(e){if(e.name==='AbortError')return}
+    const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=f.name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1e4);
+    saveFile=null;setSave('');return;
+  }
+  if(typeof MediaRecorder==='undefined'||!HTMLCanvasElement.prototype.captureStream){alert('이 브라우저는 영상 저장을 지원하지 않아요');return}
+  saving=true;
+  try{saveFile=await record();setSave('ready','저장')}catch{alert('영상을 만들지 못했어요');setSave('')}
+  saving=false;
+};
+// 사진·영상을 모두 지우고 빈 화면으로 (되돌릴 수 없어서 확인을 받음)
+$('reset').onclick=()=>{
+  if(saving||!confirm('넣은 사진·영상을 모두 지우고 처음으로 돌아갈까요?'))return;
+  clearTimeout(timer); slide=false; saveFile=null; setSave('');
+  $('play').querySelector('path').setAttribute('d','M8 5v14l11-7z');
+  items.forEach(it=>URL.revokeObjectURL(it.url)); items=[]; sel=-1;
+  view.querySelectorAll('img,video').forEach(e=>e.remove());
+  $('empty').style.display=''; $('add').hidden=false; $('play').hidden=$('save').hidden=$('reset').hidden=true;
+  layout();
 };
 $('add').onclick=()=>$('file').click();
 // 브라우저가 못 여는 이미지(HEIC — Chrome 등)는 heic-to로 JPEG 변환 (처음 필요할 때만 로드)
