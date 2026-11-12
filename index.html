@@ -83,6 +83,7 @@ let items=[], rot=180, sel=-1;           // items: {url, video}
 
 /* ---------- 사진/영상 ---------- */
 function layout(){
+  stopSpin();   // 원을 새로 만들므로 회전 애니메이션도 다시 시작 (아래 tick이 재개)
   disc.querySelectorAll('.thumb').forEach(e=>e.remove());
   for(let i=0;i<MAX;i++){
     const it=items[i], a=-i*Math.PI/6; // 30° 간격, 링 반지름 = 화면 폭의 48%
@@ -210,8 +211,20 @@ $('file').onchange=async e=>{
 let drag=false, moved=false, last=0, vel=0, sx=0, sy=0;
 const ang=e=>{const r=disc.getBoundingClientRect();return Math.atan2(e.clientY-(r.top+r.height/2),e.clientX-(r.left+r.width/2))*180/Math.PI};
 const apply=()=>{disc.style.setProperty('--rot',rot+'deg');disc.style.transform=`rotate(${rot}deg)`};
+// 자동 회전은 JS로 매 프레임 그리지 않고 브라우저 애니메이션에 맡김 → 사진 전환 등으로 메인 스레드가 바빠도 끊기지 않음
+const DUR=60000; let anims=null;   // 1분에 한 바퀴
+const stopSpin=()=>{
+  if(!anims)return;
+  rot+=360*((anims[0].currentTime||0)%DUR)/DUR; anims.forEach(a=>a.cancel()); anims=null; apply();
+};
+const startSpin=()=>{
+  const o={duration:DUR,iterations:Infinity};
+  anims=[disc.animate({transform:[`rotate(${rot}deg)`,`rotate(${rot+360}deg)`]},o),
+    ...[...disc.querySelectorAll('.thumb')].map(b=>b.animate({transform:[`rotate(${-rot}deg)`,`rotate(${-rot-360}deg)`]},o))];   // 사진 원은 반대로 돌려 똑바로 유지
+};
 disc.addEventListener('pointerdown',e=>{
   if(e.target.closest('#player'))return;
+  stopSpin();
   drag=true;moved=false;vel=0;last=ang(e);sx=e.clientX;sy=e.clientY;
 });
 addEventListener('pointermove',e=>{
@@ -247,14 +260,15 @@ window.onYouTubeIframeAPIReady=()=>{
 // 언어 상관없이 20자까지, 넘으면 ...
 const clip=t=>{const c=[...t];return c.length>20?c.slice(0,20).join('').trimEnd()+'...':t}
 // 재생 중에는 LP가 천천히 회전(1분에 한 바퀴), 마우스를 올리거나 드래그 중이면 멈춤
-let playing=false, hover=false, lastT=0;
+let playing=false, hover=false;
 const still=matchMedia('(prefers-reduced-motion:reduce)');
 $('stage').addEventListener('pointerenter',e=>{if(e.pointerType==='mouse')hover=true});
 $('stage').addEventListener('pointerleave',()=>hover=false);
-(function auto(t){
-  if(playing&&!hover&&!drag&&Math.abs(vel)<.05&&!still.matches){rot+=6*Math.min(t-lastT,100)/1000;apply()}
-  lastT=t;requestAnimationFrame(auto);
-})(0);
+(function tick(){
+  const want=playing&&!hover&&!drag&&Math.abs(vel)<.05&&!still.matches;
+  if(want&&!anims)startSpin(); else if(!want&&anims)stopSpin();
+  requestAnimationFrame(tick);
+})();
 function parse(u){
   try{const x=new URL(u.trim());
     const list=x.searchParams.get('list');
