@@ -14,8 +14,8 @@ body{display:flex;justify-content:center;font-family:Pretendard,-apple-system,"A
 button,input{font-family:inherit}
 #app{width:var(--W);height:100dvh;background:var(--cream);display:flex;flex-direction:column;overflow:hidden;position:relative}
 #stage{position:relative;z-index:1;height:calc(var(--W)*.715);flex:none}
-#disc{position:absolute;left:50%;top:calc(var(--W)*-.57);width:calc(var(--W)*1.32);height:calc(var(--W)*1.32);margin-left:calc(var(--W)*-.66);border-radius:50%;background:repeating-radial-gradient(circle closest-side,#0000 0,#0000 calc(var(--W)*.007),#ffffff0f calc(var(--W)*.007),#ffffff0f calc(var(--W)*.009)),var(--bg);touch-action:none;cursor:grab;box-shadow:0 8px 30px #0006}
-.thumb{position:absolute;width:calc(var(--W)*.156);height:calc(var(--W)*.156);margin:calc(var(--W)*-.078) 0 0 calc(var(--W)*-.078);transform:rotate(calc(var(--rot)*-1));border-radius:50%;object-fit:cover;border:0;padding:0;overflow:hidden;background:#000;cursor:pointer}
+#disc{will-change:transform;position:absolute;left:50%;top:calc(var(--W)*-.57);width:calc(var(--W)*1.32);height:calc(var(--W)*1.32);margin-left:calc(var(--W)*-.66);border-radius:50%;background:repeating-radial-gradient(circle closest-side,#0000 0,#0000 calc(var(--W)*.007),#ffffff0f calc(var(--W)*.007),#ffffff0f calc(var(--W)*.009)),var(--bg);touch-action:none;cursor:grab;box-shadow:0 8px 30px #0006}
+.thumb{will-change:transform;position:absolute;width:calc(var(--W)*.156);height:calc(var(--W)*.156);margin:calc(var(--W)*-.078) 0 0 calc(var(--W)*-.078);transform:rotate(calc(var(--rot)*-1));border-radius:50%;object-fit:cover;border:0;padding:0;overflow:hidden;background:#000;cursor:pointer}
 .thumb>*{width:100%;height:100%;object-fit:cover;pointer-events:none;display:block}
 .thumb.empty{background:var(--cream)}
 #player{position:absolute;left:0;right:0;top:calc(var(--W)*.303);transform:translateY(-50%);padding:0 calc(var(--W)*.2);z-index:2;text-align:center}
@@ -33,9 +33,11 @@ button,input{font-family:inherit}
 #ytp{position:absolute;left:0;top:0;width:200px;height:200px;opacity:0;pointer-events:none;z-index:-1}
 #add{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);z-index:3;width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:24px;line-height:1;color:var(--cream);background:#1d1719cc;border:0;border-radius:50%;cursor:pointer;padding:0 0 2px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 #view{flex:1;min-height:0;background:var(--cream);display:flex;align-items:center;justify-content:center;position:relative}
-#view>img,#view>video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1.8s ease-in-out}
+#view>.slide{will-change:opacity;position:absolute;inset:0;overflow:hidden;background:#000;opacity:0;transition:opacity 1.8s ease-in-out}
 #view>.show{opacity:1}
-@media (prefers-reduced-motion:reduce){#view>img,#view>video{transition:none}}
+.slide>*{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.slide>.bg{object-fit:cover}   /* 사진이 잘리지 않도록 contain + 배경은 미리 만든 48px 축소본을 늘려 흐리게 (CSS blur는 모바일에서 버벅임) */
+@media (prefers-reduced-motion:reduce){#view>.slide{transition:none}}
 [hidden]{display:none!important}
 #play,#save,#reset{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);z-index:3;width:52px;height:52px;display:flex;align-items:center;justify-content:center;padding:0;border-radius:50%;cursor:pointer;color:#fff;background:linear-gradient(135deg,#ffffff4d,#ffffff14);-webkit-backdrop-filter:blur(16px) saturate(170%);backdrop-filter:blur(16px) saturate(170%);border:1px solid #ffffff59;box-shadow:inset 0 1px 0 #ffffff99,inset 0 -1px 0 #ffffff26,0 6px 18px #0005}
 #play svg{width:24px;height:24px;fill:currentColor}
@@ -70,7 +72,7 @@ button,input{font-family:inherit}
       <div id="ytp"></div>
     </div>
   </div>
-  <div id="view"><div id="empty">+ 버튼이나 빈 원을 눌러<br>사진·영상을 넣어보세요 (최대 12개)</div><button id="add" aria-label="사진·영상 추가">+</button><button id="play" aria-label="슬라이드쇼 재생/정지" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button><button id="reset" aria-label="처음으로 되돌리기" hidden><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5.07167 8C5.80935 6.72229 6.88601 5.67345 8.1826 4.96946C9.47919 4.26547 10.9452 3.93375 12.4186 4.01097C13.8919 4.08818 15.3152 4.57133 16.5311 5.40699C17.747 6.24266 18.7081 7.39828 19.3082 8.74611M3.23169 5.51537L3.9611 8.6749C4.08534 9.21303 4.62229 9.54856 5.16042 9.42433L8.31996 8.69492M18.9281 15.9999C18.1904 17.2776 17.1138 18.3264 15.8172 19.0304C14.5206 19.7344 13.0546 20.0661 11.5812 19.9889C10.1079 19.9117 8.68456 19.4286 7.46866 18.5929C6.25276 17.7572 5.29164 16.6016 4.69155 15.2538M20.7681 18.4845L20.0387 15.325C19.9144 14.7869 19.3775 14.4513 18.8394 14.5756L15.6798 15.305" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button><button id="save" class="" aria-label="슬라이드쇼를 영상으로 저장" hidden><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 8L7 8C4.79086 8 3 9.79086 3 12L3 17C3 19.2091 4.79086 21 7 21L19 21C21.2091 21 23 19.2091 23 17L23 12C23 9.79086 21.2091 8 19 8L17 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M10 13L12.2929 15.2929C12.6834 15.6834 13.3166 15.6834 13.7071 15.2929L16 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M13 15L13 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span></span></button></div>
+  <div id="view"><div id="empty">+ 버튼이나 빈 원을 눌러<br>사진·영상을 넣어보세요 (최대 12개)</div><button id="add" aria-label="사진·영상 추가">+</button><button id="play" aria-label="슬라이드쇼 재생/정지" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button><button id="reset" aria-label="처음으로 되돌리기" hidden><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5.07167 8C5.80935 6.72229 6.88601 5.67345 8.1826 4.96946C9.47919 4.26547 10.9452 3.93375 12.4186 4.01097C13.8919 4.08818 15.3152 4.57133 16.5311 5.40699C17.747 6.24266 18.7081 7.39828 19.3082 8.74611M3.23169 5.51537L3.9611 8.6749C4.08534 9.21303 4.62229 9.54856 5.16042 9.42433L8.31996 8.69492M18.9281 15.9999C18.1904 17.2776 17.1138 18.3264 15.8172 19.0304C14.5206 19.7344 13.0546 20.0661 11.5812 19.9889C10.1079 19.9117 8.68456 19.4286 7.46866 18.5929C6.25276 17.7572 5.29164 16.6016 4.69155 15.2538M20.7681 18.4845L20.0387 15.325C19.9144 14.7869 19.3775 14.4513 18.8394 14.5756L15.6798 15.305" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button><button id="save" class="" aria-label="화면 녹화로 저장 (컴퓨터 전용)" hidden><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 8L7 8C4.79086 8 3 9.79086 3 12L3 17C3 19.2091 4.79086 21 7 21L19 21C21.2091 21 23 19.2091 23 17L23 12C23 9.79086 21.2091 8 19 8L17 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M10 13L12.2929 15.2929C12.6834 15.6834 13.3166 15.6834 13.7071 15.2929L16 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M13 15L13 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span></span></button></div>
 </div>
 
 <script>
@@ -87,8 +89,8 @@ function layout(){
     const b=document.createElement('button'); b.className='thumb'+(it?i===sel?' on':'':' empty');
     b.style.left=50+36.36*Math.cos(a)+'%'; b.style.top=50+36.36*Math.sin(a)+'%';
     if(it){
-      const m=document.createElement(it.video?'video':'img'); m.src=it.url;
-      if(it.video){m.muted=true;m.loop=true;m.autoplay=true;m.playsInline=true;m.play().catch(()=>{})}
+      const m=document.createElement(it.thumb?'img':'video'); m.src=it.thumb||it.url; m.alt='';
+      if(!it.thumb){m.muted=true;m.loop=true;m.autoplay=true;m.playsInline=true;m.play().catch(()=>{})}
       b.append(m); b.onclick=()=>{if(!moved)show(i)};
     }else{b.setAttribute('aria-label','사진·영상 추가'); b.onclick=()=>{if(!moved)$('file').click()}}  // 빈 원을 눌러도 추가
     disc.append(b);
@@ -96,79 +98,67 @@ function layout(){
   apply();
 }
 let slide=false, timer=0;
-const next=()=>show((sel+1)%items.length);
-function show(i){
-  sel=i; clearTimeout(timer);
-  // 이전 사진은 서서히 사라진 뒤 제거 (크로스페이드)
-  view.querySelectorAll('img,video').forEach(e=>{e.onended=e.onerror=null;e.classList.remove('show');setTimeout(()=>e.remove(),1800)});
-  $('empty').style.display=items.length?'none':''; $('add').hidden=items.length>0; $('play').hidden=$('save').hidden=$('reset').hidden=!items.length;
-  const it=items[i], m=document.createElement(it.video?'video':'img'); m.src=it.url;
+const next=()=>{if(finishRec&&sel===items.length-1)setTimeout(finishRec,500);else show((sel+1)%items.length)};
+let showId=0;
+async function show(i){
+  sel=i; clearTimeout(timer); const my=++showId;
+  $('empty').style.display=items.length?'none':''; $('add').hidden=items.length>0; $('play').hidden=$('reset').hidden=!items.length; $('save').hidden=!items.length||!CAN_REC;
+  const it=items[i], box=document.createElement('div'); box.className='slide';
+  if(it.bg){const b=new Image; b.src=it.bg; b.className='bg'; b.alt=''; box.append(b)}
+  const m=document.createElement(it.video?'video':'img'); m.src=it.url; m.alt='';
   if(it.video){
-    m.muted=true;m.autoplay=true;m.playsInline=true;m.play().catch(()=>{});  // 영상 소리는 항상 음소거
+    m.muted=true;m.autoplay=true;m.playsInline=true;                         // 영상 소리는 항상 음소거
     m.onended=()=>slide?next():m.play(); m.onerror=()=>slide&&next();        // 슬라이드쇼면 끝난 뒤 다음으로, 아니면 반복
-  }else if(slide)timer=setTimeout(next,4000);
-  view.prepend(m); m.offsetWidth; m.classList.add('show');
+  }else{
+    // 화면에 넣기 전에 미리 디코딩: 전환 도중 메인 스레드가 멈춰 LP 회전이 끊기는 것을 막음 (디코딩이 늦어도 1.5초 뒤엔 진행)
+    try{await Promise.race([m.decode(),new Promise(r=>setTimeout(r,1500))])}catch{}
+    if(my!==showId)return;
+  }
+  box.append(m);
+  // 이전 사진은 서서히 사라진 뒤 제거 (크로스페이드)
+  view.querySelectorAll('.slide').forEach(e=>{e.querySelectorAll('video').forEach(v=>v.onended=v.onerror=null);e.classList.remove('show');setTimeout(()=>e.remove(),1800)});
+  view.prepend(box); box.offsetWidth; box.classList.add('show');
+  if(it.video)m.play().catch(()=>{}); else if(slide)timer=setTimeout(next,4000);
 }
 $('play').onclick=()=>{
-  slide=!slide; clearTimeout(timer);
-  $('play').querySelector('path').setAttribute('d',slide?'M6 5h4v14H6zM14 5h4v14h-4z':'M8 5v14l11-7z');
+  slide=!slide; clearTimeout(timer); setPlayIcon(slide);
   if(slide&&!items[sel].video)timer=setTimeout(next,4000);
 };
-/* ---------- 슬라이드쇼를 영상으로 저장 (무음: YouTube 음악은 녹화할 수 없음) ---------- */
-const SLIDE=4000, FADE=1800;   // 재생 화면과 같은 간격·전환 시간
-let saveFile=null, saving=false;
+/* ---------- 화면 녹화로 저장 (컴퓨터 Chrome/Edge 전용: 탭 소리까지 담김) ---------- */
+const CAN_REC=!!(navigator.mediaDevices&&navigator.mediaDevices.getDisplayMedia);
+let saving=false, finishRec=null;
 const setSave=(cls,txt='')=>{$('save').className=cls;$('save').querySelector('span').textContent=txt};
-async function record(){
-  const W=720, H=Math.round(W*view.clientHeight/view.clientWidth/2)*2;
-  const c=document.createElement('canvas'), p=document.createElement('canvas');
-  c.width=p.width=W; c.height=p.height=H;
-  const x=c.getContext('2d'), px=p.getContext('2d');
-  const mime=['video/mp4;codecs=avc1','video/mp4','video/webm;codecs=vp9','video/webm'].find(t=>MediaRecorder.isTypeSupported(t))||'';
-  const rec=new MediaRecorder(c.captureStream(30),mime?{mimeType:mime,videoBitsPerSecond:4e6}:{}), chunks=[];
-  rec.ondataavailable=e=>e.data.size&&chunks.push(e.data);
-  const stopped=new Promise(r=>rec.onstop=r);
-  x.fillStyle='#000'; x.fillRect(0,0,W,H); rec.start();
-  const list=items.slice();
-  for(let i=0;i<list.length;i++){
-    setSave('busy',(i+1)+'/'+list.length);
-    const it=list[i], el=it.video?document.createElement('video'):new Image();
-    el.src=it.url;
-    if(it.video){el.muted=true;el.playsInline=true;Object.assign(el.style,{position:'fixed',opacity:0,width:'1px',height:'1px',pointerEvents:'none'});document.body.append(el);await el.play()}
-    else await el.decode();
-    const w0=it.video?el.videoWidth:el.naturalWidth, h0=it.video?el.videoHeight:el.naturalHeight, k=Math.max(W/w0,H/h0), dw=w0*k, dh=h0*k, t0=performance.now();
-    await new Promise(res=>(function f(t){
-      const e=t-t0;
-      if(i)x.drawImage(p,0,0);                       // 이전 장면 위에 새 장면을 서서히 겹침
-      x.globalAlpha=i?Math.min(1,e/FADE):1; x.drawImage(el,(W-dw)/2,(H-dh)/2,dw,dh); x.globalAlpha=1;
-      (it.video?el.ended||e>6e4:e>=SLIDE)?res():requestAnimationFrame(f);   // shortcut: 영상은 최대 60초까지, 더 길면 필요할 때 늘리기
-    })(t0));
-    px.drawImage(c,0,0); el.remove();
-  }
-  await new Promise(r=>setTimeout(r,300)); rec.stop(); await stopped;
-  const type=(mime||'video/webm').split(';')[0];
-  return new File([new Blob(chunks,{type})],'photoLP.'+(type.includes('mp4')?'mp4':'webm'),{type});
-}
+const setPlayIcon=on=>$('play').querySelector('path').setAttribute('d',on?'M6 5h4v14H6zM14 5h4v14h-4z':'M8 5v14l11-7z');
 $('save').onclick=async()=>{
-  if(saving)return;
-  if(saveFile){   // 두 번째 탭: 공유창(모바일은 '비디오 저장' → 사진 앱) 또는 다운로드. 사용자 탭이 있어야 공유창이 열려서 녹화와 분리
-    const f=saveFile;
-    try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});saveFile=null;setSave('');return}}
-    catch(e){if(e.name==='AbortError')return}
-    const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=f.name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1e4);
-    saveFile=null;setSave('');return;
-  }
-  if(typeof MediaRecorder==='undefined'||!HTMLCanvasElement.prototype.captureStream){alert('이 브라우저는 영상 저장을 지원하지 않아요');return}
-  saving=true;
-  try{saveFile=await record();setSave('ready','저장')}catch{alert('영상을 만들지 못했어요');setSave('')}
-  saving=false;
+  if(finishRec){finishRec();return}   // 녹화 중에 누르면 거기서 종료
+  let stream;
+  try{stream=await navigator.mediaDevices.getDisplayMedia({video:{frameRate:30},audio:true,preferCurrentTab:true,selfBrowserSurface:'include',systemAudio:'include'})}
+  catch(e){if(e.name!=='NotAllowedError')alert('화면 녹화를 시작할 수 없어요: '+e.name+' '+e.message);return}   // NotAllowedError = 공유 창에서 취소(또는 권한 거부)
+  try{const t=stream.getVideoTracks()[0];if(window.CropTarget)await t.cropTo(await CropTarget.fromElement($('app')))}catch{}   // 앱 영역만 (지원 안 하면 탭 전체)
+  // 소리까지 안정적으로 담기도록 webm 우선, 지원 안 하면 mp4 (Safari)
+  const mime=['video/webm;codecs=vp9,opus','video/webm','video/mp4'].find(t=>MediaRecorder.isTypeSupported(t))||'';
+  let rec; const chunks=[];
+  try{rec=new MediaRecorder(stream,mime?{mimeType:mime,videoBitsPerSecond:6e6}:{})}catch(e){stream.getTracks().forEach(t=>t.stop());alert('녹화를 시작하지 못했어요: '+e.message);return}
+  rec.ondataavailable=e=>e.data.size&&chunks.push(e.data);
+  rec.onstop=()=>{
+    stream.getTracks().forEach(t=>t.stop()); finishRec=null; saving=false; setSave('');
+    const type=(mime||'video/webm').split(';')[0], a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob(chunks,{type})); a.download='photoLP.'+(type.includes('mp4')?'mp4':'webm'); a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href),1e4);
+  };
+  finishRec=()=>{if(rec.state==='recording'){slide=false;clearTimeout(timer);setPlayIcon(false);rec.stop()}};
+  stream.getVideoTracks()[0].onended=finishRec;   // 브라우저의 '공유 중지'를 눌러도 저장
+  rec.onerror=e=>{alert('녹화 중 오류가 났어요: '+(e.error&&e.error.message||''));finishRec&&finishRec()};
+  saving=true; setSave('busy','REC');
+  try{rec.start()}catch(e){stream.getTracks().forEach(t=>t.stop());saving=false;setSave('');finishRec=null;alert('녹화를 시작하지 못했어요: '+e.message);return}
+  slide=true; setPlayIcon(true); show(0);          // 처음부터 한 바퀴 자동 재생, 마지막 장이 끝나면 next()가 녹화를 끝냄
 };
 // 사진·영상을 모두 지우고 빈 화면으로 (되돌릴 수 없어서 확인을 받음)
 $('reset').onclick=()=>{
   if(saving||!confirm('넣은 사진·영상을 모두 지우고 처음으로 돌아갈까요?'))return;
-  clearTimeout(timer); slide=false; saveFile=null; setSave('');
-  $('play').querySelector('path').setAttribute('d','M8 5v14l11-7z');
-  items.forEach(it=>URL.revokeObjectURL(it.url)); items=[]; sel=-1;
-  view.querySelectorAll('img,video').forEach(e=>e.remove());
+  clearTimeout(timer); slide=false; setPlayIcon(false);
+  items.forEach(it=>[it.url,it.thumb,it.bg].forEach(u=>u&&URL.revokeObjectURL(u))); items=[]; sel=-1; showId++;
+  view.querySelectorAll('.slide').forEach(e=>e.remove());
   $('empty').style.display=''; $('add').hidden=false; $('play').hidden=$('save').hidden=$('reset').hidden=true;
   layout();
 };
@@ -179,19 +169,39 @@ const toJpeg=async f=>{
   heicLib??=new Promise((ok,no)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/heic-to@1.6.7/dist/iife/heic-to.js';s.onload=()=>ok(window.HeicTo);s.onerror=no;document.head.append(s)});
   return (await heicLib)({blob:f,type:'image/jpeg',quality:.9});
 };
-const canShow=url=>new Promise(r=>{const i=new Image;i.onload=()=>r(true);i.onerror=()=>r(false);i.src=url});
+// 가져올 때 한 번만: 보기용(최대 1600px)·원 썸네일(240px)·흐린 배경(48px)을 만들어 둠 → 원본 대용량 사진을 매번 디코딩하지 않음
+async function prep(src,video){
+  let el,w,h;
+  if(video){
+    el=document.createElement('video'); el.muted=true; el.playsInline=true; el.preload='auto'; el.src=src;
+    await new Promise((ok,no)=>{el.onloadeddata=ok; el.onerror=no; setTimeout(no,4000); el.play().catch(()=>{})});   // iOS는 재생해야 첫 장면이 로드됨
+    el.pause(); w=el.videoWidth; h=el.videoHeight;
+  }else{el=new Image; el.src=src; await el.decode(); w=el.naturalWidth; h=el.naturalHeight}
+  const shot=(max,q,dark)=>new Promise(r=>{
+    const k=Math.min(1,max/Math.max(w,h)), c=document.createElement('canvas'); c.width=Math.round(w*k)||1; c.height=Math.round(h*k)||1;
+    const x=c.getContext('2d'); x.drawImage(el,0,0,c.width,c.height); if(dark){x.fillStyle='#0000004d';x.fillRect(0,0,c.width,c.height)}
+    c.toBlob(b=>r(URL.createObjectURL(b)),'image/jpeg',q);
+  });
+  const it={video, url:video?src:await shot(1600,.9), thumb:await shot(240,.85), bg:await shot(48,.8,true)};
+  if(video){el.removeAttribute('src');el.load()} else URL.revokeObjectURL(src);
+  return it;
+}
 $('file').onchange=async e=>{
   const files=[...e.target.files], failed=[]; e.target.value='';
   for(const f of files){
     if(items.length>=MAX){alert('최대 12개까지 넣을 수 있어요');break}
     // 파일 type이 비어 오는 경우(HEIC, 일부 MOV)가 있어 확장자도 확인
     const video=f.type.startsWith('video')||/\.(mp4|mov|m4v|webm)$/i.test(f.name);
-    let url=URL.createObjectURL(f);
-    if(!video&&!await canShow(url)){
-      URL.revokeObjectURL(url);
-      try{url=URL.createObjectURL(await toJpeg(f))}catch{failed.push(f.name);continue}
+    let url=URL.createObjectURL(f), it;
+    try{it=await prep(url,video)}
+    catch{
+      if(video)it={url,video};   // 첫 장면을 못 뽑아도 영상 자체는 넣음
+      else{                      // 브라우저가 못 여는 이미지(HEIC 등)는 변환 후 다시 시도
+        URL.revokeObjectURL(url);
+        try{it=await prep(URL.createObjectURL(await toJpeg(f)),false)}catch{failed.push(f.name);continue}
+      }
     }
-    items.push({url,video}); layout(); if(sel<0)show(0);
+    items.push(it); layout(); if(sel<0)show(0);
   }
   if(failed.length)alert('열 수 없는 파일이에요: '+failed.join(', '));
 };
