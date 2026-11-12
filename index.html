@@ -75,12 +75,12 @@ button,input{font-family:inherit}
       <div id="ytp"></div>
     </div>
   </div>
-  <div id="view"><div id="empty">+ 버튼이나 빈 원을 눌러<br>사진·영상을 넣어보세요 (최대 12개)</div><button id="add" aria-label="사진·영상 추가">+</button><button id="play" aria-label="슬라이드쇼 재생/정지" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button><button id="reset" aria-label="처음으로 되돌리기" hidden><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5.07167 8C5.80935 6.72229 6.88601 5.67345 8.1826 4.96946C9.47919 4.26547 10.9452 3.93375 12.4186 4.01097C13.8919 4.08818 15.3152 4.57133 16.5311 5.40699C17.747 6.24266 18.7081 7.39828 19.3082 8.74611M3.23169 5.51537L3.9611 8.6749C4.08534 9.21303 4.62229 9.54856 5.16042 9.42433L8.31996 8.69492M18.9281 15.9999C18.1904 17.2776 17.1138 18.3264 15.8172 19.0304C14.5206 19.7344 13.0546 20.0661 11.5812 19.9889C10.1079 19.9117 8.68456 19.4286 7.46866 18.5929C6.25276 17.7572 5.29164 16.6016 4.69155 15.2538M20.7681 18.4845L20.0387 15.325C19.9144 14.7869 19.3775 14.4513 18.8394 14.5756L15.6798 15.305" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button><button id="save" class="" aria-label="화면 녹화로 저장 (컴퓨터 전용)" hidden><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 8L7 8C4.79086 8 3 9.79086 3 12L3 17C3 19.2091 4.79086 21 7 21L19 21C21.2091 21 23 19.2091 23 17L23 12C23 9.79086 21.2091 8 19 8L17 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M10 13L12.2929 15.2929C12.6834 15.6834 13.3166 15.6834 13.7071 15.2929L16 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M13 15L13 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span></span></button></div>
+  <div id="view"><div id="empty">+ 버튼이나 빈 원을 눌러<br>사진·영상을 넣어보세요 (최대 20개)</div><button id="add" aria-label="사진·영상 추가">+</button><button id="play" aria-label="슬라이드쇼 재생/정지" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button><button id="reset" aria-label="처음으로 되돌리기" hidden><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5.07167 8C5.80935 6.72229 6.88601 5.67345 8.1826 4.96946C9.47919 4.26547 10.9452 3.93375 12.4186 4.01097C13.8919 4.08818 15.3152 4.57133 16.5311 5.40699C17.747 6.24266 18.7081 7.39828 19.3082 8.74611M3.23169 5.51537L3.9611 8.6749C4.08534 9.21303 4.62229 9.54856 5.16042 9.42433L8.31996 8.69492M18.9281 15.9999C18.1904 17.2776 17.1138 18.3264 15.8172 19.0304C14.5206 19.7344 13.0546 20.0661 11.5812 19.9889C10.1079 19.9117 8.68456 19.4286 7.46866 18.5929C6.25276 17.7572 5.29164 16.6016 4.69155 15.2538M20.7681 18.4845L20.0387 15.325C19.9144 14.7869 19.3775 14.4513 18.8394 14.5756L15.6798 15.305" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button><button id="save" class="" aria-label="화면 녹화로 저장 (컴퓨터 전용)" hidden><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 8L7 8C4.79086 8 3 9.79086 3 12L3 17C3 19.2091 4.79086 21 7 21L19 21C21.2091 21 23 19.2091 23 17L23 12C23 9.79086 21.2091 8 19 8L17 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M10 13L12.2929 15.2929C12.6834 15.6834 13.3166 15.6834 13.7071 15.2929L16 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M13 15L13 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span></span></button></div>
 </div>
 
 <script>
 const YT_KEY='AIzaSyAyfxySKK5H1wAW2iqgUO_t97x4fLl2KTw';  // 여기에 YouTube Data API 키(AIza...)를 넣으세요
-const MAX=12, $=id=>document.getElementById(id);
+const MAX=20, RING=12, $=id=>document.getElementById(id);
 const disc=$('disc'), view=$('view'), res=$('res');
 let items=[], rot=180, sel=-1;           // items: {url, video}
 
@@ -104,38 +104,51 @@ const endGhost=cancel=>{
 addEventListener('pointerup',()=>endGhost(false));
 addEventListener('pointercancel',()=>endGhost(true));
 addEventListener('pointerdown',e=>{if(pick>=0&&!e.target.closest('.thumb')){pick=-1;layout()}});   // 바깥을 누르면 선택 취소
-function layout(){
-  stopSpin();   // 원을 새로 만들므로 회전 애니메이션도 다시 시작 (아래 tick이 재개)
-  disc.querySelectorAll('.thumb').forEach(e=>e.remove());
-  for(let i=0;i<MAX;i++){
-    const it=items[i], a=-i*Math.PI/6; // 30° 간격, 링 반지름 = 화면 폭의 48%
-    const b=document.createElement('button'); b.className='thumb'+(it?i===sel?' on':'':' empty');
-    b.style.left=50+36.36*Math.cos(a)+'%'; b.style.top=50+36.36*Math.sin(a)+'%';
+// LP 위의 원은 12자리(30° 간격) 그대로 두고, 화면 위쪽(안 보이는 곳)을 지나는 원에 다음 사진을 바꿔 끼움 → 돌리면 20장이 차례로 이어져 나옴
+const ringSize=()=>items.length<RING?RING:Math.min(MAX,items.length+1);   // 12장 이상이면 추가용 빈 원 1개 포함
+function assign(r,force){
+  const N=ringSize(), c=(r-90)/30;   // c: 지금 맨 아래에 온 자리 번호(연속값)
+  disc.querySelectorAll('.thumb').forEach((b,p)=>{
+    const L=p+RING*Math.round((c-p)/RING), i=((L%N)+N)%N;   // 이 원이 맡을 사진 번호. 값이 바뀌는 순간 원은 정확히 맨 위(화면 밖)에 있음
+    if(!force&&+b.dataset.i===i)return;
+    const it=items[i]; b.dataset.i=i; b.className='thumb'+(it?i===pick?' pick':'':' empty'); b.replaceChildren();
+    b.setAttribute('aria-label',it?'사진 '+(i+1):'사진·영상 추가');
     if(it){
       const m=document.createElement(it.thumb?'img':'video'); m.src=it.thumb||it.url; m.alt='';
       if(!it.thumb){m.muted=true;m.loop=true;m.autoplay=true;m.playsInline=true;m.play().catch(()=>{})}
-      b.append(m); if(i===pick)b.classList.add('pick');
-      // 길게 누르면(0.5초) 선택 → 끌어서 다른 사진 원에 놓거나, 손을 뗀 뒤 다른 원을 탭하면 서로 자리 바꿈
-      b.dataset.i=i;
-      b.onpointerdown=e=>{held=false;px=e.clientX;py=e.clientY;clearTimeout(holdT);holdT=setTimeout(()=>{
-        if(!drag||moved)return;
-        pick=i; held=true; b.classList.add('pick','lift');
-        // 손가락을 따라다니는 사진 원: 다른 사진 위에 놓으면 자리 바꿈
-        ghost=document.createElement('div'); ghost.id='ghost'; if(it.thumb)ghost.style.backgroundImage=`url(${it.thumb})`;
-        ghost.style.left=px+'px'; ghost.style.top=py+'px'; gx=px; gy=py; gMoved=false; document.body.append(ghost);
-      },500)};
-      b.oncontextmenu=e=>e.preventDefault();
-      b.onclick=()=>{
-        if(moved)return;
-        if(held){held=false;return}          // 길게 누른 손을 뗄 때 생기는 클릭은 무시
-        if(pick<0){show(i);return}
-        if(pick!==i)swap(pick,i);
-        pick=-1; layout();
-      };
-    }else{b.setAttribute('aria-label','사진·영상 추가'); b.onclick=()=>{if(moved)return; if(pick>=0){pick=-1;layout()}else $('file').click()}}  // 빈 원을 눌러도 추가 (순서 바꾸는 중이면 취소)
+      b.append(m);
+    }
+  });
+}
+function layout(){
+  stopSpin();   // 원을 새로 만들므로 회전 애니메이션도 다시 시작 (아래 tick이 재개)
+  disc.querySelectorAll('.thumb').forEach(e=>e.remove());
+  for(let p=0;p<RING;p++){
+    const a=-p*Math.PI/6; // 30° 간격, 링 반지름 = 화면 폭의 48%
+    const b=document.createElement('button'), I=()=>+b.dataset.i; b.className='thumb';
+    b.style.left=50+36.36*Math.cos(a)+'%'; b.style.top=50+36.36*Math.sin(a)+'%';
+    // 길게 누르면(0.5초) 선택 → 끌어서 다른 사진 원에 놓거나, 손을 뗀 뒤 다른 원을 탭하면 서로 자리 바꿈
+    b.onpointerdown=e=>{held=false;px=e.clientX;py=e.clientY;clearTimeout(holdT);holdT=setTimeout(()=>{
+      const i=I(), it=items[i];
+      if(!it||!drag||moved)return;
+      pick=i; held=true; b.classList.add('pick','lift');
+      // 손가락을 따라다니는 사진 원: 다른 사진 위에 놓으면 자리 바꿈
+      ghost=document.createElement('div'); ghost.id='ghost'; if(it.thumb)ghost.style.backgroundImage=`url(${it.thumb})`;
+      ghost.style.left=px+'px'; ghost.style.top=py+'px'; gx=px; gy=py; gMoved=false; document.body.append(ghost);
+    },500)};
+    b.oncontextmenu=e=>e.preventDefault();
+    b.onclick=()=>{
+      if(moved)return;
+      if(held){held=false;return}          // 길게 누른 손을 뗄 때 생기는 클릭은 무시
+      const i=I();
+      if(!items[i]){if(pick>=0){pick=-1;layout()}else $('file').click();return}   // 빈 원을 눌러도 추가 (순서 바꾸는 중이면 취소)
+      if(pick<0){show(i);return}
+      if(pick!==i)swap(pick,i);
+      pick=-1; layout();
+    };
     disc.append(b);
   }
-  apply();
+  assign(rot,true); apply();
 }
 let slide=false, timer=0;
 const next=()=>{if(finishRec&&sel===items.length-1)setTimeout(finishRec,500);else show((sel+1)%items.length)};
@@ -230,7 +243,7 @@ async function prep(src,video){
 $('file').onchange=async e=>{
   const files=[...e.target.files], failed=[]; e.target.value='';
   for(const f of files){
-    if(items.length>=MAX){alert('최대 12개까지 넣을 수 있어요');break}
+    if(items.length>=MAX){alert('최대 20개까지 넣을 수 있어요');break}
     // 파일 type이 비어 오는 경우(HEIC, 일부 MOV)가 있어 확장자도 확인
     const video=f.type.startsWith('video')||/\.(mp4|mov|m4v|webm)$/i.test(f.name);
     let url=URL.createObjectURL(f), it;
@@ -250,7 +263,7 @@ $('file').onchange=async e=>{
 /* ---------- LP 회전 (드래그 + 관성) ---------- */
 let drag=false, moved=false, last=0, vel=0, sx=0, sy=0;
 const ang=e=>{const r=disc.getBoundingClientRect();return Math.atan2(e.clientY-(r.top+r.height/2),e.clientX-(r.left+r.width/2))*180/Math.PI};
-const apply=()=>{disc.style.setProperty('--rot',rot+'deg');disc.style.transform=`rotate(${rot}deg)`};
+const apply=()=>{disc.style.setProperty('--rot',rot+'deg');disc.style.transform=`rotate(${rot}deg)`;assign(rot)};
 // 자동 회전은 JS로 매 프레임 그리지 않고 브라우저 애니메이션에 맡김 → 사진 전환 등으로 메인 스레드가 바빠도 끊기지 않음
 const DUR=60000; let anims=null;   // 1분에 한 바퀴
 const stopSpin=()=>{
@@ -312,6 +325,7 @@ $('stage').addEventListener('pointerleave',()=>hover=false);
 (function tick(){
   const want=playing&&!hover&&!drag&&pick<0&&Math.abs(vel)<.05&&!still.matches;   // 순서 바꾸는 중(pick)에는 정지
   if(want&&!anims)startSpin(); else if(!want&&anims)stopSpin();
+  if(anims)assign(rot+360*((anims[0].currentTime||0)%DUR)/DUR);   // 자동 회전 중에도 위로 넘어간 원의 사진을 바꿔 끼움
   requestAnimationFrame(tick);
 })();
 function parse(u){
