@@ -9,7 +9,7 @@
 #yt input::placeholder{color:#e9dcc8cc}
 :root{--W:min(100vw,max(480px,47dvh));--bg:#1d1719;--cream:#e9dcc8;--ink:#8a6e52}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;height:100%;background:#111}
+html,body{margin:0;height:100%;background:#111;overflow:hidden;overscroll-behavior:none}   /* 당겨서 새로고침·바운스 스크롤 방지 */
 body{display:flex;justify-content:center;font-family:Pretendard,-apple-system,"Apple SD Gothic Neo",sans-serif}
 button,input{font-family:inherit}
 #app{width:var(--W);height:100dvh;background:var(--cream);display:flex;flex-direction:column;overflow:hidden;position:relative}
@@ -17,7 +17,7 @@ button,input{font-family:inherit}
 #disc{will-change:transform;position:absolute;left:50%;top:calc(var(--W)*-.57);width:calc(var(--W)*1.32);height:calc(var(--W)*1.32);margin-left:calc(var(--W)*-.66);border-radius:50%;background:repeating-radial-gradient(circle closest-side,#0000 0,#0000 calc(var(--W)*.007),#ffffff0f calc(var(--W)*.007),#ffffff0f calc(var(--W)*.009)),var(--bg);touch-action:none;cursor:grab;box-shadow:0 8px 30px #0006}
 .thumb{will-change:transform;position:absolute;width:calc(var(--W)*.156);height:calc(var(--W)*.156);margin:calc(var(--W)*-.078) 0 0 calc(var(--W)*-.078);transform:rotate(calc(var(--rot)*-1));border-radius:50%;object-fit:cover;border:0;padding:0;overflow:hidden;background:#000;cursor:pointer}
 .thumb>*{width:100%;height:100%;object-fit:cover;pointer-events:none;display:block}
-.thumb{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.thumb{touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 .thumb.pick,.thumb.drop{outline:3px solid var(--cream);outline-offset:3px}
 .thumb.pick.lift>*{opacity:.35}
 #ghost{position:fixed;z-index:20;width:calc(var(--W)*.17);height:calc(var(--W)*.17);border-radius:50%;transform:translate(-50%,-50%);background:#000 center/cover;outline:3px solid var(--cream);outline-offset:3px;box-shadow:0 8px 20px #0008;pointer-events:none}
@@ -262,6 +262,8 @@ const startSpin=()=>{
   anims=[disc.animate({transform:[`rotate(${rot}deg)`,`rotate(${rot+360}deg)`]},o),
     ...[...disc.querySelectorAll('.thumb')].map(b=>b.animate({transform:[`rotate(${-rot}deg)`,`rotate(${-rot-360}deg)`]},o))];   // 사진 원은 반대로 돌려 똑바로 유지
 };
+// iOS는 touch-action만으로 당겨서 새로고침이 막히지 않는 경우가 있어 LP 위 터치 이동의 기본 동작(스크롤)을 직접 막음
+disc.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
 disc.addEventListener('pointerdown',e=>{
   if(e.target.closest('#player'))return;
   stopSpin();
