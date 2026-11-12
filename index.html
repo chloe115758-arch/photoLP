@@ -39,7 +39,7 @@ button,input{font-family:inherit}
 .slide>.bg{object-fit:cover;opacity:.65}   /* 사진이 잘리지 않도록 contain + 미리 만들어 둔 흐린 배경을 아이보리 위에 반투명하게 (CSS blur는 모바일에서 버벅임) */
 @media (prefers-reduced-motion:reduce){#view>.slide{transition:none}}
 [hidden]{display:none!important}
-#play,#save,#reset{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);z-index:3;width:52px;height:52px;display:flex;align-items:center;justify-content:center;padding:0;border-radius:50%;cursor:pointer;color:#fff;background:linear-gradient(135deg,#ffffff4d,#ffffff14);-webkit-backdrop-filter:blur(16px) saturate(170%);backdrop-filter:blur(16px) saturate(170%);border:1px solid #ffffff59;box-shadow:inset 0 1px 0 #ffffff99,inset 0 -1px 0 #ffffff26,0 6px 18px #0005}
+#play,#save,#reset{opacity:.6;position:absolute;left:50%;bottom:24px;transform:translateX(-50%);z-index:3;width:52px;height:52px;display:flex;align-items:center;justify-content:center;padding:0;border-radius:50%;cursor:pointer;color:#fff;background:linear-gradient(135deg,#ffffff4d,#ffffff14);-webkit-backdrop-filter:blur(16px) saturate(170%);backdrop-filter:blur(16px) saturate(170%);border:1px solid #ffffff59;box-shadow:inset 0 1px 0 #ffffff99,inset 0 -1px 0 #ffffff26,0 6px 18px #0005}
 #play svg{width:24px;height:24px;fill:currentColor}
 #play{width:56px;height:56px}
 #save,#reset{width:44px;height:44px;bottom:30px;transform:none}
