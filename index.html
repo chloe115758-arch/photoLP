@@ -33,10 +33,10 @@ button,input{font-family:inherit}
 #ytp{position:absolute;left:0;top:0;width:200px;height:200px;opacity:0;pointer-events:none;z-index:-1}
 #add{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);z-index:3;width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:24px;line-height:1;color:var(--cream);background:#1d1719cc;border:0;border-radius:50%;cursor:pointer;padding:0 0 2px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 #view{flex:1;min-height:0;background:var(--cream);display:flex;align-items:center;justify-content:center;position:relative}
-#view>.slide{will-change:opacity;position:absolute;inset:0;overflow:hidden;background:#000;opacity:0;transition:opacity 1.8s ease-in-out}
+#view>.slide{will-change:opacity;position:absolute;inset:0;overflow:hidden;background:var(--cream);opacity:0;transition:opacity 1.8s ease-in-out}
 #view>.show{opacity:1}
 .slide>*{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
-.slide>.bg{object-fit:cover}   /* 사진이 잘리지 않도록 contain + 배경은 미리 만든 48px 축소본을 늘려 흐리게 (CSS blur는 모바일에서 버벅임) */
+.slide>.bg{object-fit:cover;opacity:.65}   /* 사진이 잘리지 않도록 contain + 미리 만들어 둔 흐린 배경을 아이보리 위에 반투명하게 (CSS blur는 모바일에서 버벅임) */
 @media (prefers-reduced-motion:reduce){#view>.slide{transition:none}}
 [hidden]{display:none!important}
 #play,#save,#reset{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);z-index:3;width:52px;height:52px;display:flex;align-items:center;justify-content:center;padding:0;border-radius:50%;cursor:pointer;color:#fff;background:linear-gradient(135deg,#ffffff4d,#ffffff14);-webkit-backdrop-filter:blur(16px) saturate(170%);backdrop-filter:blur(16px) saturate(170%);border:1px solid #ffffff59;box-shadow:inset 0 1px 0 #ffffff99,inset 0 -1px 0 #ffffff26,0 6px 18px #0005}
@@ -170,7 +170,7 @@ const toJpeg=async f=>{
   heicLib??=new Promise((ok,no)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/heic-to@1.6.7/dist/iife/heic-to.js';s.onload=()=>ok(window.HeicTo);s.onerror=no;document.head.append(s)});
   return (await heicLib)({blob:f,type:'image/jpeg',quality:.9});
 };
-// 가져올 때 한 번만: 보기용(최대 1600px)·원 썸네일(240px)·흐린 배경(48px)을 만들어 둠 → 원본 대용량 사진을 매번 디코딩하지 않음
+// 가져올 때 한 번만: 보기용(최대 1600px)·원 썸네일(240px)·흐린 배경(512px)을 만들어 둠 → 원본 대용량 사진을 매번 디코딩하지 않음
 async function prep(src,video){
   let el,w,h;
   if(video){
@@ -178,12 +178,18 @@ async function prep(src,video){
     await new Promise((ok,no)=>{el.onloadeddata=ok; el.onerror=no; setTimeout(no,4000); el.play().catch(()=>{})});   // iOS는 재생해야 첫 장면이 로드됨
     el.pause(); w=el.videoWidth; h=el.videoHeight;
   }else{el=new Image; el.src=src; await el.decode(); w=el.naturalWidth; h=el.naturalHeight}
-  const shot=(max,q,dark)=>new Promise(r=>{
+  const shot=(max,q)=>new Promise(r=>{
     const k=Math.min(1,max/Math.max(w,h)), c=document.createElement('canvas'); c.width=Math.round(w*k)||1; c.height=Math.round(h*k)||1;
-    const x=c.getContext('2d'); x.drawImage(el,0,0,c.width,c.height); if(dark){x.fillStyle='#0000004d';x.fillRect(0,0,c.width,c.height)}
+    const x=c.getContext('2d'); x.drawImage(el,0,0,c.width,c.height);
     c.toBlob(b=>r(URL.createObjectURL(b)),'image/jpeg',q);
   });
-  const it={video, url:video?src:await shot(1600,.9), thumb:await shot(240,.85), bg:await shot(48,.8,true)};
+  // 흐린 배경: 32px로 줄인 뒤 2배씩 단계적으로 키워 512px로 만듦 → 계단 없이 부드러운 블러 (Safari는 canvas blur 필터 미지원)
+  const soft=()=>new Promise(r=>{
+    const mk=(src,cw)=>{const c=document.createElement('canvas'); c.width=cw; c.height=Math.max(1,Math.round(cw*h/w)); const x=c.getContext('2d'); x.imageSmoothingQuality='high'; x.drawImage(src,0,0,c.width,c.height); return c};
+    let c=mk(el,32); for(const cw of [64,128,256,512])c=mk(c,cw);
+    c.toBlob(b=>r(URL.createObjectURL(b)),'image/jpeg',.9);
+  });
+  const it={video, url:video?src:await shot(1600,.9), thumb:await shot(240,.85), bg:await soft()};
   if(video){el.removeAttribute('src');el.load()} else URL.revokeObjectURL(src);
   return it;
 }
