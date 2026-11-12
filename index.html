@@ -17,9 +17,13 @@ button,input{font-family:inherit}
 #disc{will-change:transform;position:absolute;left:50%;top:calc(var(--W)*-.57);width:calc(var(--W)*1.32);height:calc(var(--W)*1.32);margin-left:calc(var(--W)*-.66);border-radius:50%;background:repeating-radial-gradient(circle closest-side,#0000 0,#0000 calc(var(--W)*.007),#ffffff0f calc(var(--W)*.007),#ffffff0f calc(var(--W)*.009)),var(--bg);touch-action:none;cursor:grab;box-shadow:0 8px 30px #0006}
 .thumb{will-change:transform;position:absolute;width:calc(var(--W)*.156);height:calc(var(--W)*.156);margin:calc(var(--W)*-.078) 0 0 calc(var(--W)*-.078);transform:rotate(calc(var(--rot)*-1));border-radius:50%;object-fit:cover;border:0;padding:0;overflow:hidden;background:#000;cursor:pointer}
 .thumb>*{width:100%;height:100%;object-fit:cover;pointer-events:none;display:block}
+.thumb{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.thumb.pick,.thumb.drop{outline:3px solid var(--cream);outline-offset:3px}
+.thumb.pick.lift>*{opacity:.35}
+#ghost{position:fixed;z-index:20;width:calc(var(--W)*.17);height:calc(var(--W)*.17);border-radius:50%;transform:translate(-50%,-50%);background:#000 center/cover;outline:3px solid var(--cream);outline-offset:3px;box-shadow:0 8px 20px #0008;pointer-events:none}
 .thumb.empty{background:var(--cream)}
-#player{position:absolute;left:0;right:0;top:calc(var(--W)*.303);transform:translateY(-50%);padding:0 calc(var(--W)*.2);z-index:2;text-align:center}
-#title{display:block;width:100%;margin:0 auto;padding:8px 0;background:none;border:0;cursor:pointer;color:#6e5846;font-size:calc(var(--W)*.03);letter-spacing:-.5px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:opacity .3s}
+#player{position:absolute;left:0;right:0;top:calc(var(--W)*.303);transform:translateY(-50%);padding:0 calc(var(--W)*.2);z-index:2;text-align:center;pointer-events:none}   /* 가로 전체를 덮는 상자가 양옆 사진 원의 터치를 가로채지 않게 */
+#title{pointer-events:auto;display:inline-block;max-width:100%;margin:0 auto;padding:8px 0;background:none;border:0;cursor:pointer;color:#6e5846;font-size:calc(var(--W)*.03);letter-spacing:-.5px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:opacity .3s}
 #title.paused{opacity:.45}
 #arm{position:absolute;left:0;top:0;width:100%;height:100%;z-index:2;pointer-events:none}
 #yt{display:none;position:absolute;z-index:4;top:10px;left:calc(var(--W)*.14);right:calc(var(--W)*.14);margin:0}
@@ -35,8 +39,7 @@ button,input{font-family:inherit}
 #view{flex:1;min-height:0;background:var(--cream);display:flex;align-items:center;justify-content:center;position:relative}
 #view>.slide{will-change:opacity;position:absolute;inset:0;overflow:hidden;background:var(--cream);opacity:0;transition:opacity 1.8s ease-in-out}
 #view>.show{opacity:1}
-.slide>*{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
-.slide>.bg{object-fit:cover;opacity:.65}   /* 사진이 잘리지 않도록 contain + 미리 만들어 둔 흐린 배경을 아이보리 위에 반투명하게 (CSS blur는 모바일에서 버벅임) */
+.slide>*{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 @media (prefers-reduced-motion:reduce){#view>.slide{transition:none}}
 [hidden]{display:none!important}
 #play,#save,#reset{opacity:.6;position:absolute;left:50%;bottom:24px;transform:translateX(-50%);z-index:3;width:52px;height:52px;display:flex;align-items:center;justify-content:center;padding:0;border-radius:50%;cursor:pointer;color:#fff;background:linear-gradient(135deg,#ffffff4d,#ffffff14);-webkit-backdrop-filter:blur(16px) saturate(170%);backdrop-filter:blur(16px) saturate(170%);border:1px solid #ffffff59;box-shadow:inset 0 1px 0 #ffffff99,inset 0 -1px 0 #ffffff26,0 6px 18px #0005}
@@ -82,6 +85,25 @@ const disc=$('disc'), view=$('view'), res=$('res');
 let items=[], rot=180, sel=-1;           // items: {url, video}
 
 /* ---------- 사진/영상 ---------- */
+let pick=-1, held=false, holdT=0, ghost=null, px=0, py=0, gx=0, gy=0, gMoved=false;
+const swap=(a,b)=>{[items[a],items[b]]=[items[b],items[a]]; sel=sel===a?b:sel===b?a:sel};   // 보고 있던 사진은 그대로 유지
+const dropTarget=()=>{const t=document.elementFromPoint(px,py), b=t&&t.closest('.thumb'); return b&&items[b.dataset.i]&&+b.dataset.i!==pick?b:null};
+addEventListener('pointermove',e=>{
+  if(!ghost)return;
+  px=e.clientX; py=e.clientY; ghost.style.left=px+'px'; ghost.style.top=py+'px';
+  if(Math.hypot(px-gx,py-gy)>10)gMoved=true;
+  disc.querySelectorAll('.drop').forEach(b=>b.classList.remove('drop')); const t=dropTarget(); if(t)t.classList.add('drop');
+});
+const endGhost=cancel=>{
+  if(!ghost)return;
+  const t=gMoved&&!cancel?dropTarget():null; ghost.remove(); ghost=null;
+  if(t)swap(pick,+t.dataset.i);
+  if(t||gMoved||cancel){pick=-1; layout(); setTimeout(()=>held=false,0)}   // 제자리에서 손을 떼면 선택 유지(다른 원을 탭해서도 바꿀 수 있음)
+  else disc.querySelectorAll('.lift').forEach(b=>b.classList.remove('lift'));
+};
+addEventListener('pointerup',()=>endGhost(false));
+addEventListener('pointercancel',()=>endGhost(true));
+addEventListener('pointerdown',e=>{if(pick>=0&&!e.target.closest('.thumb')){pick=-1;layout()}});   // 바깥을 누르면 선택 취소
 function layout(){
   stopSpin();   // 원을 새로 만들므로 회전 애니메이션도 다시 시작 (아래 tick이 재개)
   disc.querySelectorAll('.thumb').forEach(e=>e.remove());
@@ -92,8 +114,25 @@ function layout(){
     if(it){
       const m=document.createElement(it.thumb?'img':'video'); m.src=it.thumb||it.url; m.alt='';
       if(!it.thumb){m.muted=true;m.loop=true;m.autoplay=true;m.playsInline=true;m.play().catch(()=>{})}
-      b.append(m); b.onclick=()=>{if(!moved)show(i)};
-    }else{b.setAttribute('aria-label','사진·영상 추가'); b.onclick=()=>{if(!moved)$('file').click()}}  // 빈 원을 눌러도 추가
+      b.append(m); if(i===pick)b.classList.add('pick');
+      // 길게 누르면(0.5초) 선택 → 끌어서 다른 사진 원에 놓거나, 손을 뗀 뒤 다른 원을 탭하면 서로 자리 바꿈
+      b.dataset.i=i;
+      b.onpointerdown=e=>{held=false;px=e.clientX;py=e.clientY;clearTimeout(holdT);holdT=setTimeout(()=>{
+        if(!drag||moved)return;
+        pick=i; held=true; b.classList.add('pick','lift');
+        // 손가락을 따라다니는 사진 원: 다른 사진 위에 놓으면 자리 바꿈
+        ghost=document.createElement('div'); ghost.id='ghost'; if(it.thumb)ghost.style.backgroundImage=`url(${it.thumb})`;
+        ghost.style.left=px+'px'; ghost.style.top=py+'px'; gx=px; gy=py; gMoved=false; document.body.append(ghost);
+      },500)};
+      b.oncontextmenu=e=>e.preventDefault();
+      b.onclick=()=>{
+        if(moved)return;
+        if(held){held=false;return}          // 길게 누른 손을 뗄 때 생기는 클릭은 무시
+        if(pick<0){show(i);return}
+        if(pick!==i)swap(pick,i);
+        pick=-1; layout();
+      };
+    }else{b.setAttribute('aria-label','사진·영상 추가'); b.onclick=()=>{if(moved)return; if(pick>=0){pick=-1;layout()}else $('file').click()}}  // 빈 원을 눌러도 추가 (순서 바꾸는 중이면 취소)
     disc.append(b);
   }
   apply();
@@ -105,7 +144,6 @@ async function show(i){
   sel=i; clearTimeout(timer); const my=++showId;
   $('empty').style.display=items.length?'none':''; $('add').hidden=items.length>0; $('play').hidden=$('reset').hidden=!items.length; $('save').hidden=!items.length||!CAN_REC;
   const it=items[i], box=document.createElement('div'); box.className='slide';
-  if(it.bg){const b=new Image; b.src=it.bg; b.className='bg'; b.alt=''; box.append(b)}
   const m=document.createElement(it.video?'video':'img'); m.src=it.url; m.alt='';
   if(it.video){
     m.muted=true;m.autoplay=true;m.playsInline=true;                         // 영상 소리는 항상 음소거
@@ -135,6 +173,8 @@ $('save').onclick=async()=>{
   let stream;
   try{stream=await navigator.mediaDevices.getDisplayMedia({video:{frameRate:30},audio:true,preferCurrentTab:true,selfBrowserSurface:'include',systemAudio:'include'})}
   catch(e){if(e.name!=='NotAllowedError')alert('화면 녹화를 시작할 수 없어요: '+e.name+' '+e.message);return}   // NotAllowedError = 공유 창에서 취소(또는 권한 거부)
+  // 소리 트랙이 없으면(탭 오디오 공유를 안 켰거나 '창/전체 화면'을 고른 경우) 무음으로 저장되므로 미리 알림
+  if(!stream.getAudioTracks().length&&!confirm("소리가 함께 공유되지 않았어요.\n공유 창에서 'Chrome 탭'을 고르고 '탭 오디오도 공유'를 켜야 음악이 담겨요.\n\n소리 없이 계속 녹화할까요?")){stream.getTracks().forEach(t=>t.stop());return}
   try{const t=stream.getVideoTracks()[0];if(window.CropTarget)await t.cropTo(await CropTarget.fromElement($('app')))}catch{}   // 앱 영역만 (지원 안 하면 탭 전체)
   // 소리까지 안정적으로 담기도록 webm 우선, 지원 안 하면 mp4 (Safari)
   const mime=['video/webm;codecs=vp9,opus','video/webm','video/mp4'].find(t=>MediaRecorder.isTypeSupported(t))||'';
@@ -158,7 +198,7 @@ $('save').onclick=async()=>{
 $('reset').onclick=()=>{
   if(saving||!confirm('넣은 사진·영상을 모두 지우고 처음으로 돌아갈까요?'))return;
   clearTimeout(timer); slide=false; setPlayIcon(false);
-  items.forEach(it=>[it.url,it.thumb,it.bg].forEach(u=>u&&URL.revokeObjectURL(u))); items=[]; sel=-1; showId++;
+  items.forEach(it=>[it.url,it.thumb].forEach(u=>u&&URL.revokeObjectURL(u))); items=[]; sel=-1; pick=-1; showId++;
   view.querySelectorAll('.slide').forEach(e=>e.remove());
   $('empty').style.display=''; $('add').hidden=false; $('play').hidden=$('save').hidden=$('reset').hidden=true;
   layout();
@@ -170,7 +210,7 @@ const toJpeg=async f=>{
   heicLib??=new Promise((ok,no)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/heic-to@1.6.7/dist/iife/heic-to.js';s.onload=()=>ok(window.HeicTo);s.onerror=no;document.head.append(s)});
   return (await heicLib)({blob:f,type:'image/jpeg',quality:.9});
 };
-// 가져올 때 한 번만: 보기용(최대 1600px)·원 썸네일(240px)·흐린 배경(512px)을 만들어 둠 → 원본 대용량 사진을 매번 디코딩하지 않음
+// 가져올 때 한 번만: 보기용(최대 1600px)·원 썸네일(240px)을 만들어 둠 → 원본 대용량 사진을 매번 디코딩하지 않음
 async function prep(src,video){
   let el,w,h;
   if(video){
@@ -183,13 +223,7 @@ async function prep(src,video){
     const x=c.getContext('2d'); x.drawImage(el,0,0,c.width,c.height);
     c.toBlob(b=>r(URL.createObjectURL(b)),'image/jpeg',q);
   });
-  // 흐린 배경: 32px로 줄인 뒤 2배씩 단계적으로 키워 512px로 만듦 → 계단 없이 부드러운 블러 (Safari는 canvas blur 필터 미지원)
-  const soft=()=>new Promise(r=>{
-    const mk=(src,cw)=>{const c=document.createElement('canvas'); c.width=cw; c.height=Math.max(1,Math.round(cw*h/w)); const x=c.getContext('2d'); x.imageSmoothingQuality='high'; x.drawImage(src,0,0,c.width,c.height); return c};
-    let c=mk(el,32); for(const cw of [64,128,256,512])c=mk(c,cw);
-    c.toBlob(b=>r(URL.createObjectURL(b)),'image/jpeg',.9);
-  });
-  const it={video, url:video?src:await shot(1600,.9), thumb:await shot(240,.85), bg:await soft()};
+  const it={video, url:video?src:await shot(1600,.9), thumb:await shot(240,.85)};
   if(video){el.removeAttribute('src');el.load()} else URL.revokeObjectURL(src);
   return it;
 }
@@ -234,8 +268,11 @@ disc.addEventListener('pointerdown',e=>{
   drag=true;moved=false;vel=0;last=ang(e);sx=e.clientX;sy=e.clientY;
 });
 addEventListener('pointermove',e=>{
-  if(!drag)return;
-  if(Math.hypot(e.clientX-sx,e.clientY-sy)>6)moved=true;
+  if(!drag||held)return;   // 길게 눌러 사진을 고른 뒤에는 그 손가락으로 LP가 돌지 않게
+  if(!moved){               // 손가락이 살짝 떨리는 정도(10px)로는 돌리지 않음 → 길게 누르기가 끊기지 않음
+    if(Math.hypot(e.clientX-sx,e.clientY-sy)<=10)return;
+    moved=true; last=ang(e); return;
+  }
   const a=ang(e);let d=a-last;if(d>180)d-=360;if(d<-180)d+=360;
   rot+=d;vel=d;last=a;apply();
 });
@@ -271,7 +308,7 @@ const still=matchMedia('(prefers-reduced-motion:reduce)');
 $('stage').addEventListener('pointerenter',e=>{if(e.pointerType==='mouse')hover=true});
 $('stage').addEventListener('pointerleave',()=>hover=false);
 (function tick(){
-  const want=playing&&!hover&&!drag&&Math.abs(vel)<.05&&!still.matches;
+  const want=playing&&!hover&&!drag&&pick<0&&Math.abs(vel)<.05&&!still.matches;   // 순서 바꾸는 중(pick)에는 정지
   if(want&&!anims)startSpin(); else if(!want&&anims)stopSpin();
   requestAnimationFrame(tick);
 })();
