@@ -158,6 +158,8 @@ const tag=document.createElement('script');tag.src='https://www.youtube.com/ifra
 window.onYouTubeIframeAPIReady=()=>{
   yt=new YT.Player('ytp',{height:'200',width:'200',playerVars:{playsinline:1},events:{
     onReady:()=>{if(pending)load(pending)},
+    // 브라우저가 자동재생을 막은 경우 안내 (제목을 누르면 재생)
+    onAutoplayBlocked:()=>{$('title').textContent='제목을 눌러 재생하세요'},
     // 재생 실패 이유를 제목 자리에 표시
     onError:e=>{$('title').textContent=({2:'잘못된 영상 주소예요',5:'이 브라우저에서 재생할 수 없어요',100:'삭제됐거나 비공개인 영상이에요',101:'외부 재생이 막힌 영상이에요. 다른 결과를 골라주세요',150:'외부 재생이 막힌 영상이에요. 다른 결과를 골라주세요',153:'http://localhost 주소로 열어야 재생돼요'})[e.data]||'재생 오류 ('+e.data+')'},
     onStateChange:e=>{
@@ -166,8 +168,8 @@ window.onYouTubeIframeAPIReady=()=>{
       const d=yt.getVideoData&&yt.getVideoData(); if(d&&d.title)$('title').textContent=clip(d.title);
     }}});
 };
-// 한글은 10자, 영문·숫자 등은 15자까지 (한글 1자 = 1.5칸), 넘으면 …
-const clip=t=>{let w=0,o='';for(const c of t){w+=/[\u3131-\u318E\uAC00-\uD7A3]/.test(c)?1.5:1;if(w>15)return o.trimEnd()+'...';o+=c}return o};
+// 언어 상관없이 20자까지, 넘으면 ...
+const clip=t=>{const c=[...t];return c.length>20?c.slice(0,20).join('').trimEnd()+'...':t}
 // 재생 중에는 LP가 천천히 회전(1분에 한 바퀴), 마우스를 올리거나 드래그 중이면 멈춤
 let playing=false, hover=false, lastT=0;
 const still=matchMedia('(prefers-reduced-motion:reduce)');
