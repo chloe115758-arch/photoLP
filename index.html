@@ -33,7 +33,7 @@ button,input{font-family:inherit}
 #ytp{position:absolute;left:0;top:0;width:200px;height:200px;opacity:0;pointer-events:none;z-index:-1}
 #add{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);z-index:3;width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:24px;line-height:1;color:var(--cream);background:#1d1719cc;border:0;border-radius:50%;cursor:pointer;padding:0 0 2px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 #view{flex:1;min-height:0;background:var(--cream);display:flex;align-items:center;justify-content:center;position:relative}
-#view>img,#view>video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .8s}
+#view>img,#view>video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1.8s ease-in-out}
 #view>.show{opacity:1}
 @media (prefers-reduced-motion:reduce){#view>img,#view>video{transition:none}}
 [hidden]{display:none!important}
@@ -92,19 +92,19 @@ const next=()=>show((sel+1)%items.length);
 function show(i){
   sel=i; clearTimeout(timer);
   // 이전 사진은 서서히 사라진 뒤 제거 (크로스페이드)
-  view.querySelectorAll('img,video').forEach(e=>{e.onended=e.onerror=null;e.classList.remove('show');setTimeout(()=>e.remove(),800)});
+  view.querySelectorAll('img,video').forEach(e=>{e.onended=e.onerror=null;e.classList.remove('show');setTimeout(()=>e.remove(),1800)});
   $('empty').style.display=items.length?'none':''; $('add').hidden=items.length>0; $('play').hidden=!items.length;
   const it=items[i], m=document.createElement(it.video?'video':'img'); m.src=it.url;
   if(it.video){
     m.muted=true;m.autoplay=true;m.playsInline=true;m.play().catch(()=>{});  // 영상 소리는 항상 음소거
     m.onended=()=>slide?next():m.play(); m.onerror=()=>slide&&next();        // 슬라이드쇼면 끝난 뒤 다음으로, 아니면 반복
-  }else if(slide)timer=setTimeout(next,3000);
+  }else if(slide)timer=setTimeout(next,4000);
   view.prepend(m); m.offsetWidth; m.classList.add('show');
 }
 $('play').onclick=()=>{
   slide=!slide; clearTimeout(timer);
   $('play').querySelector('path').setAttribute('d',slide?'M6 5h4v14H6zM14 5h4v14h-4z':'M8 5v14l11-7z');
-  if(slide&&!items[sel].video)timer=setTimeout(next,3000);
+  if(slide&&!items[sel].video)timer=setTimeout(next,4000);
 };
 $('add').onclick=()=>$('file').click();
 // 브라우저가 못 여는 이미지(HEIC — Chrome 등)는 heic-to로 JPEG 변환 (처음 필요할 때만 로드)
@@ -163,9 +163,11 @@ window.onYouTubeIframeAPIReady=()=>{
     onStateChange:e=>{
       $('title').classList.toggle('paused',e.data===2);
       playing=e.data===1;
-      const d=yt.getVideoData&&yt.getVideoData(); if(d&&d.title)$('title').textContent=d.title;
+      const d=yt.getVideoData&&yt.getVideoData(); if(d&&d.title)$('title').textContent=clip(d.title);
     }}});
 };
+// 한글은 10자, 영문·숫자 등은 15자까지 (한글 1자 = 1.5칸), 넘으면 …
+const clip=t=>{let w=0,o='';for(const c of t){w+=/[\u3131-\u318E\uAC00-\uD7A3]/.test(c)?1.5:1;if(w>15)return o.trimEnd()+'...';o+=c}return o};
 // 재생 중에는 LP가 천천히 회전(1분에 한 바퀴), 마우스를 올리거나 드래그 중이면 멈춤
 let playing=false, hover=false, lastT=0;
 const still=matchMedia('(prefers-reduced-motion:reduce)');
