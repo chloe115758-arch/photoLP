@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>photo LP</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+#yt input::placeholder{color:#e9dcc8cc}
+:root{--W:min(100vw,max(480px,47dvh));--bg:#1d1719;--cream:#e9dcc8;--ink:#8a6e52}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#111}
+body{display:flex;justify-content:center;font-family:Pretendard,-apple-system,"Apple SD Gothic Neo",sans-serif}
+button,input{font-family:inherit}
+#app{width:var(--W);height:100dvh;background:var(--cream);display:flex;flex-direction:column;overflow:hidden;position:relative}
+#stage{position:relative;z-index:1;height:calc(var(--W)*.715);flex:none}
+#disc{position:absolute;left:50%;top:calc(var(--W)*-.57);width:calc(var(--W)*1.32);height:calc(var(--W)*1.32);margin-left:calc(var(--W)*-.66);border-radius:50%;background:repeating-radial-gradient(circle closest-side,#0000 0,#0000 calc(var(--W)*.007),#ffffff0f calc(var(--W)*.007),#ffffff0f calc(var(--W)*.009)),var(--bg);touch-action:none;cursor:grab;box-shadow:0 8px 30px #0006}
+.thumb{position:absolute;width:calc(var(--W)*.156);height:calc(var(--W)*.156);margin:calc(var(--W)*-.078) 0 0 calc(var(--W)*-.078);transform:rotate(calc(var(--rot)*-1));border-radius:50%;object-fit:cover;border:0;padding:0;overflow:hidden;background:#000;cursor:pointer}
+.thumb>*{width:100%;height:100%;object-fit:cover;pointer-events:none;display:block}
+.thumb.empty{background:var(--cream)}
+#player{position:absolute;left:0;right:0;top:calc(var(--W)*.303);transform:translateY(-50%);padding:0 calc(var(--W)*.2);z-index:2;text-align:center}
+#title{display:block;width:100%;margin:0 auto;padding:8px 0;background:none;border:0;cursor:pointer;color:#6e5846;font-size:calc(var(--W)*.03);letter-spacing:-.5px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:opacity .3s}
+#title.paused{opacity:.45}
+#arm{position:absolute;left:0;top:0;width:100%;height:100%;z-index:2;pointer-events:none}
+#yt{display:none;position:absolute;z-index:4;top:10px;left:calc(var(--W)*.14);right:calc(var(--W)*.14);margin:0}
+#yt.open{display:block}
+#yt.open~#hole{visibility:hidden}
+#hole{position:absolute;z-index:3;left:50%;top:calc(var(--W)*.04);width:calc(var(--W)*.1);height:calc(var(--W)*.1);margin-left:calc(var(--W)*-.05);border:0;padding:0;border-radius:50%;background:var(--cream);cursor:pointer}
+#yt input{-webkit-appearance:none;appearance:none;width:100%;height:44px;border:0;border-radius:99px;color:var(--cream);font-size:16px;font-weight:500;padding:0 16px 0 44px;-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);box-shadow:inset 0 2px 4px #0009,inset 0 -1px 0 #ffffff40,0 1px 0 #ffffff14;background:#e9dcc81f url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23e9dcc8' stroke-opacity='.6' stroke-width='2.2' stroke-linecap='round' d='M10.5 4a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zM15.5 15.5 20 20'/%3E%3C/svg%3E") 16px 50%/19px no-repeat}
+#res{display:none;position:absolute;z-index:5;left:12px;right:12px;top:60px;max-height:calc(var(--W)*.6);overflow:auto;border-radius:16px;background:linear-gradient(135deg,#2a2226cc,#1d1719b3 45%,#2a2226cc);-webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%);border:1px solid #ffffff40;box-shadow:inset 0 1px 0 #ffffff80,inset 0 -1px 0 #ffffff14,inset 0 0 14px #ffffff12,0 8px 24px #0008;color:var(--cream);font-size:12px;padding:4px}
+#res button{display:flex;gap:8px;align-items:center;width:100%;background:none;border:0;color:inherit;text-align:left;padding:4px;cursor:pointer;font:inherit}
+#res img{width:48px;height:36px;object-fit:cover;border-radius:4px;flex:none}
+#ytp{position:absolute;left:0;top:0;width:200px;height:200px;opacity:0;pointer-events:none;z-index:-1}
+#add{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);z-index:3;width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:24px;line-height:1;color:var(--cream);background:#1d1719cc;border:0;border-radius:50%;cursor:pointer;padding:0 0 2px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+#view{flex:1;min-height:0;background:var(--cream);display:flex;align-items:center;justify-content:center;position:relative}
+#view>img,#view>video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .8s}
+#view>.show{opacity:1}
+@media (prefers-reduced-motion:reduce){#view>img,#view>video{transition:none}}
+[hidden]{display:none!important}
+#play{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);z-index:3;width:52px;height:52px;display:flex;align-items:center;justify-content:center;padding:0;border-radius:50%;cursor:pointer;color:#fff;background:linear-gradient(135deg,#ffffff4d,#ffffff14);-webkit-backdrop-filter:blur(16px) saturate(170%);backdrop-filter:blur(16px) saturate(170%);border:1px solid #ffffff59;box-shadow:inset 0 1px 0 #ffffff99,inset 0 -1px 0 #ffffff26,0 6px 18px #0005}
+#play svg{width:24px;height:24px;fill:currentColor}
+#empty{color:var(--ink);font-size:14px;text-align:center;padding:20px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="stage">
+    <input id="file" type="file" accept="image/*,video/*,.heic,.heif" multiple hidden>
+    <div id="disc"></div>
+    <form id="yt"><input id="url" type="search" enterkeyhint="search" placeholder="검색" aria-label="곡 이름 또는 YouTube 링크 검색"></form>
+    <svg id="arm" viewBox="0 0 100 71.5" aria-hidden="true" stroke-linecap="round">
+      <path d="M97.7 66.2 77.5 34.5" stroke="#1d1719" stroke-width="1.7"/>
+      <path d="M97.7 66.2 77.5 34.5" stroke="#b9ab97" stroke-width="1"/>
+      <path d="M97.7 66.2 96 63.6" stroke="#8c7f6e" stroke-width="3.2"/>
+      <path d="M77.5 34.5 75.6 31.5" stroke="#d9ccb8" stroke-width="3.2" stroke-linecap="butt"/>
+      <circle cx="95" cy="62" r="3.6" fill="#1d1719" stroke="#b9ab97" stroke-width=".6"/><circle cx="95" cy="62" r="1.3" fill="#e9dcc8"/>
+    </svg>
+    <div id="res"></div>
+    <button id="hole" aria-label="노래 검색"></button>
+    <div id="player">
+      <button id="title" title="누르면 재생/일시정지">노래를 검색해보세요</button>
+      <div id="ytp"></div>
+    </div>
+  </div>
+  <div id="view"><div id="empty">+ 버튼이나 빈 원을 눌러<br>사진·영상을 넣어보세요 (최대 12개)</div><button id="add" aria-label="사진·영상 추가">+</button><button id="play" aria-label="슬라이드쇼 재생/정지" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button></div>
+</div>
+
+<script>
+const YT_KEY='AIzaSyAyfxySKK5H1wAW2iqgUO_t97x4fLl2KTw';  // 여기에 YouTube Data API 키(AIza...)를 넣으세요
+const MAX=12, $=id=>document.getElementById(id);
+const disc=$('disc'), view=$('view'), res=$('res');
+let items=[], rot=180, sel=-1;           // items: {url, video}
+
+/* ---------- 사진/영상 ---------- */
+function layout(){
+  disc.querySelectorAll('.thumb').forEach(e=>e.remove());
+  for(let i=0;i<MAX;i++){
+    const it=items[i], a=-i*Math.PI/6; // 30° 간격, 링 반지름 = 화면 폭의 48%
+    const b=document.createElement('button'); b.className='thumb'+(it?i===sel?' on':'':' empty');
+    b.style.left=50+36.36*Math.cos(a)+'%'; b.style.top=50+36.36*Math.sin(a)+'%';
+    if(it){
+      const m=document.createElement(it.video?'video':'img'); m.src=it.url;
+      if(it.video){m.muted=true;m.loop=true;m.autoplay=true;m.playsInline=true;m.play().catch(()=>{})}
+      b.append(m); b.onclick=()=>{if(!moved)show(i)};
+    }else{b.setAttribute('aria-label','사진·영상 추가'); b.onclick=()=>{if(!moved)$('file').click()}}  // 빈 원을 눌러도 추가
+    disc.append(b);
+  }
+  apply();
+}
+let slide=false, timer=0;
+const next=()=>show((sel+1)%items.length);
+function show(i){
+  sel=i; clearTimeout(timer);
+  // 이전 사진은 서서히 사라진 뒤 제거 (크로스페이드)
+  view.querySelectorAll('img,video').forEach(e=>{e.onended=e.onerror=null;e.classList.remove('show');setTimeout(()=>e.remove(),800)});
+  $('empty').style.display=items.length?'none':''; $('add').hidden=items.length>0; $('play').hidden=!items.length;
+  const it=items[i], m=document.createElement(it.video?'video':'img'); m.src=it.url;
+  if(it.video){
+    m.muted=true;m.autoplay=true;m.playsInline=true;m.play().catch(()=>{});  // 영상 소리는 항상 음소거
+    m.onended=()=>slide?next():m.play(); m.onerror=()=>slide&&next();        // 슬라이드쇼면 끝난 뒤 다음으로, 아니면 반복
+  }else if(slide)timer=setTimeout(next,3000);
+  view.prepend(m); m.offsetWidth; m.classList.add('show');
+}
+$('play').onclick=()=>{
+  slide=!slide; clearTimeout(timer);
+  $('play').querySelector('path').setAttribute('d',slide?'M6 5h4v14H6zM14 5h4v14h-4z':'M8 5v14l11-7z');
+  if(slide&&!items[sel].video)timer=setTimeout(next,3000);
+};
+$('add').onclick=()=>$('file').click();
+// 브라우저가 못 여는 이미지(HEIC — Chrome 등)는 heic-to로 JPEG 변환 (처음 필요할 때만 로드)
+let heicLib=null;
+const toJpeg=async f=>{
+  heicLib??=new Promise((ok,no)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/heic-to@1.6.7/dist/iife/heic-to.js';s.onload=()=>ok(window.HeicTo);s.onerror=no;document.head.append(s)});
+  return (await heicLib)({blob:f,type:'image/jpeg',quality:.9});
+};
+const canShow=url=>new Promise(r=>{const i=new Image;i.onload=()=>r(true);i.onerror=()=>r(false);i.src=url});
+$('file').onchange=async e=>{
+  const files=[...e.target.files], failed=[]; e.target.value='';
+  for(const f of files){
+    if(items.length>=MAX){alert('최대 12개까지 넣을 수 있어요');break}
+    // 파일 type이 비어 오는 경우(HEIC, 일부 MOV)가 있어 확장자도 확인
+    const video=f.type.startsWith('video')||/\.(mp4|mov|m4v|webm)$/i.test(f.name);
+    let url=URL.createObjectURL(f);
+    if(!video&&!await canShow(url)){
+      URL.revokeObjectURL(url);
+      try{url=URL.createObjectURL(await toJpeg(f))}catch{failed.push(f.name);continue}
+    }
+    items.push({url,video}); layout(); if(sel<0)show(0);
+  }
+  if(failed.length)alert('열 수 없는 파일이에요: '+failed.join(', '));
+};
+
+/* ---------- LP 회전 (드래그 + 관성) ---------- */
+let drag=false, moved=false, last=0, vel=0, sx=0, sy=0;
+const ang=e=>{const r=disc.getBoundingClientRect();return Math.atan2(e.clientY-(r.top+r.height/2),e.clientX-(r.left+r.width/2))*180/Math.PI};
+const apply=()=>{disc.style.setProperty('--rot',rot+'deg');disc.style.transform=`rotate(${rot}deg)`};
+disc.addEventListener('pointerdown',e=>{
+  if(e.target.closest('#player'))return;
+  drag=true;moved=false;vel=0;last=ang(e);sx=e.clientX;sy=e.clientY;
+});
+addEventListener('pointermove',e=>{
+  if(!drag)return;
+  if(Math.hypot(e.clientX-sx,e.clientY-sy)>6)moved=true;
+  const a=ang(e);let d=a-last;if(d>180)d-=360;if(d<-180)d+=360;
+  rot+=d;vel=d;last=a;apply();
+});
+addEventListener('pointerup',()=>{
+  if(!drag)return;drag=false;
+  setTimeout(()=>moved=false,0);
+  (function spin(){if(drag||Math.abs(vel)<.05)return;rot+=vel;vel*=.95;apply();requestAnimationFrame(spin)})();
+});
+layout();
+
+/* ---------- YouTube 플레이어 ---------- */
+if(location.protocol==='file:')$('title').textContent='http://localhost 주소로 열어야 재생돼요';
+let yt=null, pending=null;
+const tag=document.createElement('script');tag.src='https://www.youtube.com/iframe_api';document.head.append(tag);
+window.onYouTubeIframeAPIReady=()=>{
+  yt=new YT.Player('ytp',{height:'200',width:'200',playerVars:{playsinline:1},events:{
+    onReady:()=>{if(pending)load(pending)},
+    // 재생 실패 이유를 제목 자리에 표시
+    onError:e=>{$('title').textContent=({2:'잘못된 영상 주소예요',5:'이 브라우저에서 재생할 수 없어요',100:'삭제됐거나 비공개인 영상이에요',101:'외부 재생이 막힌 영상이에요. 다른 결과를 골라주세요',150:'외부 재생이 막힌 영상이에요. 다른 결과를 골라주세요',153:'http://localhost 주소로 열어야 재생돼요'})[e.data]||'재생 오류 ('+e.data+')'},
+    onStateChange:e=>{
+      $('title').classList.toggle('paused',e.data===2);
+      playing=e.data===1;
+      const d=yt.getVideoData&&yt.getVideoData(); if(d&&d.title)$('title').textContent=d.title;
+    }}});
+};
+// 재생 중에는 LP가 천천히 회전(1분에 한 바퀴), 마우스를 올리거나 드래그 중이면 멈춤
+let playing=false, hover=false, lastT=0;
+const still=matchMedia('(prefers-reduced-motion:reduce)');
+$('stage').addEventListener('pointerenter',e=>{if(e.pointerType==='mouse')hover=true});
+$('stage').addEventListener('pointerleave',()=>hover=false);
+(function auto(t){
+  if(playing&&!hover&&!drag&&Math.abs(vel)<.05&&!still.matches){rot+=6*Math.min(t-lastT,100)/1000;apply()}
+  lastT=t;requestAnimationFrame(auto);
+})(0);
+function parse(u){
+  try{const x=new URL(u.trim());
+    const list=x.searchParams.get('list');
+    const v=x.hostname.includes('youtu.be')?x.pathname.slice(1):x.searchParams.get('v');
+    return {v,list};
+  }catch{return null}
+}
+function load(p){
+  if(!yt||!yt.loadVideoById){pending=p;return}
+  if(p.list) yt.loadPlaylist({list:p.list,listType:'playlist',index:0}); else yt.loadVideoById(p.v);
+}
+$('yt').onsubmit=async e=>{
+  e.preventDefault();
+  const q=$('url').value.trim(); if(!q)return;
+  const p=/^https?:\/\//.test(q)&&parse(q);
+  if(p&&(p.v||p.list)){closeSearch();load(p);return}
+  if(!YT_KEY){alert('링크를 붙여넣거나, 파일 위쪽 YT_KEY에 API 키를 넣어주세요');return}
+  res.style.display='block';res.textContent='검색 중…';
+  try{
+    const r=await fetch('https://www.googleapis.com/youtube/v3/search?'+new URLSearchParams({part:'snippet',type:'video',videoEmbeddable:'true',videoSyndicated:'true',maxResults:8,q,key:YT_KEY}));
+    const j=await r.json(); if(j.error)throw new Error(j.error.message);
+    res.textContent='';
+    j.items.forEach(it=>{
+      const b=document.createElement('button'),s=it.snippet;
+      const t=document.createElement('textarea');t.innerHTML=s.title;   // HTML 엔티티 해제
+      b.innerHTML='<img src="'+s.thumbnails.default.url+'"><span></span>';
+      b.lastChild.textContent=t.value+' · '+s.channelTitle;
+      b.onclick=()=>{closeSearch();load({v:it.id.videoId})};
+      res.append(b);
+    });
+    if(!j.items.length)res.textContent='결과가 없어요';
+  }catch(err){res.textContent='검색 실패: '+err.message}
+};
+const closeSearch=()=>{res.style.display='none';$('yt').classList.remove('open')};
+$('hole').onclick=()=>{$('yt').classList.add('open');$('url').focus()};
+addEventListener('pointerdown',e=>{if(!e.target.closest('#res,#yt,#hole'))closeSearch()});
+addEventListener('keydown',e=>{if(e.key==='Escape')closeSearch()});
+// 버튼 없이 제목을 누르면 재생/일시정지
+$('title').onclick=()=>{if(!yt||!yt.getPlayerState)return;yt.getPlayerState()===1?yt.pauseVideo():yt.playVideo()};
+</script>
+</body>
+</html>
