@@ -6,53 +6,50 @@
 <title>photo LP</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
-#yt input::placeholder{color:#e9dcc8cc}
-:root{--W:min(100vw,max(480px,47dvh));--bg:#1d1719;--cream:#e9dcc8;--ink:#8a6e52}
+#yt input::placeholder{color:var(--dot);opacity:.8}
+:root{--W:min(100vw,max(480px,47dvh));--bg:#1d1719;--cream:#e9dcc8;--dot:#e9dcc8;--title:#6e5846;--ink:#8a6e52;--groove:#ffffff0f;--next:#76220b}   /* bg=LP, cream=바탕, dot=빈 원·강조, title=곡 제목, ink=바탕 위 글자 */
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;background:#111;overflow:hidden;overscroll-behavior:none}   /* 당겨서 새로고침·바운스 스크롤 방지 */
 body{display:flex;justify-content:center;font-family:Pretendard,-apple-system,"Apple SD Gothic Neo",sans-serif}
 button,input{font-family:inherit}
 #app{width:var(--W);height:100dvh;background:var(--cream);display:flex;flex-direction:column;overflow:hidden;position:relative}
 #stage{position:relative;z-index:1;height:calc(var(--W)*.715);flex:none}
-#disc{will-change:transform;position:absolute;left:50%;top:calc(var(--W)*-.57);width:calc(var(--W)*1.32);height:calc(var(--W)*1.32);margin-left:calc(var(--W)*-.66);border-radius:50%;background:repeating-radial-gradient(circle closest-side,#0000 0,#0000 calc(var(--W)*.007),#ffffff0f calc(var(--W)*.007),#ffffff0f calc(var(--W)*.009)),var(--bg);touch-action:none;cursor:grab;box-shadow:0 8px 30px #0006}
+#disc{will-change:transform;position:absolute;left:50%;top:calc(var(--W)*-.57);width:calc(var(--W)*1.32);height:calc(var(--W)*1.32);margin-left:calc(var(--W)*-.66);border-radius:50%;background:repeating-radial-gradient(circle closest-side,#0000 0,#0000 calc(var(--W)*.007),var(--groove) calc(var(--W)*.007),var(--groove) calc(var(--W)*.009)),var(--bg);touch-action:none;cursor:grab;box-shadow:0 8px 30px #0006}
 .thumb{will-change:transform;position:absolute;width:calc(var(--W)*.156);height:calc(var(--W)*.156);margin:calc(var(--W)*-.078) 0 0 calc(var(--W)*-.078);transform:rotate(calc(var(--rot)*-1));border-radius:50%;object-fit:cover;border:0;padding:0;overflow:hidden;background:#000;cursor:pointer}
 .thumb>*{width:100%;height:100%;object-fit:cover;pointer-events:none;display:block}
 .thumb{touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
-.thumb.pick,.thumb.drop{outline:3px solid var(--cream);outline-offset:3px}
+.thumb.pick,.thumb.drop{outline:3px solid var(--dot);outline-offset:3px}
 .thumb.pick.lift>*{opacity:.35}
-#ghost{position:fixed;z-index:20;width:calc(var(--W)*.17);height:calc(var(--W)*.17);border-radius:50%;transform:translate(-50%,-50%);background:#000 center/cover;outline:3px solid var(--cream);outline-offset:3px;box-shadow:0 8px 20px #0008;pointer-events:none}
-.thumb.empty{background:var(--cream)}
+#ghost{position:fixed;z-index:20;width:calc(var(--W)*.17);height:calc(var(--W)*.17);border-radius:50%;transform:translate(-50%,-50%);background:#000 center/cover;outline:3px solid var(--dot);outline-offset:3px;box-shadow:0 8px 20px #0008;pointer-events:none}
+.thumb.empty{background:var(--dot)}
 #player{position:absolute;left:0;right:0;top:calc(var(--W)*.303);transform:translateY(-50%);padding:0 calc(var(--W)*.2);z-index:2;text-align:center;pointer-events:none}   /* 가로 전체를 덮는 상자가 양옆 사진 원의 터치를 가로채지 않게 */
-#title{pointer-events:auto;display:inline-block;max-width:100%;margin:0 auto;padding:8px 0;background:none;border:0;cursor:pointer;color:#6e5846;font-size:calc(var(--W)*.03);letter-spacing:-.5px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:opacity .3s}
+#title{pointer-events:auto;display:inline-block;max-width:100%;margin:0 auto;padding:8px 0;background:none;border:0;cursor:pointer;color:var(--title);font-size:calc(var(--W)*.03);letter-spacing:-.5px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:opacity .3s}
 #title.paused{opacity:.45}
 #arm{position:absolute;left:0;top:0;width:100%;height:100%;z-index:2;pointer-events:none}
 #yt{display:none;position:absolute;z-index:4;top:10px;left:calc(var(--W)*.14);right:calc(var(--W)*.14);margin:0}
 #yt.open{display:block}
 #yt.open~#hole{visibility:hidden}
-#hole{position:absolute;z-index:3;left:50%;top:calc(var(--W)*.04);width:calc(var(--W)*.1);height:calc(var(--W)*.1);margin-left:calc(var(--W)*-.05);border:0;padding:0;border-radius:50%;background:var(--cream);cursor:pointer}
-#yt input{-webkit-appearance:none;appearance:none;width:100%;height:44px;border:0;border-radius:99px;color:var(--cream);font-size:16px;font-weight:500;padding:0 16px 0 44px;-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);box-shadow:inset 0 2px 4px #0009,inset 0 -1px 0 #ffffff40,0 1px 0 #ffffff14;background:#e9dcc81f url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23e9dcc8' stroke-opacity='.6' stroke-width='2.2' stroke-linecap='round' d='M10.5 4a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zM15.5 15.5 20 20'/%3E%3C/svg%3E") 16px 50%/19px no-repeat}
+#hole{position:absolute;z-index:3;left:50%;top:calc(var(--W)*.04);width:calc(var(--W)*.1);height:calc(var(--W)*.1);margin-left:calc(var(--W)*-.05);border:0;padding:0;border-radius:50%;background:var(--dot);cursor:pointer}
+#yt input{-webkit-appearance:none;appearance:none;width:100%;height:44px;border:0;border-radius:99px;color:var(--dot);font-size:16px;font-weight:500;padding:0 16px 0 44px;-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);box-shadow:inset 0 2px 4px #0009,inset 0 -1px 0 #ffffff40,0 1px 0 #ffffff14;background:#e9dcc81f url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23e9dcc8' stroke-opacity='.6' stroke-width='2.2' stroke-linecap='round' d='M10.5 4a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zM15.5 15.5 20 20'/%3E%3C/svg%3E") 16px 50%/19px no-repeat}
 #res{display:none;position:absolute;z-index:5;left:12px;right:12px;top:60px;max-height:calc(var(--W)*.6);overflow:auto;border-radius:16px;background:linear-gradient(135deg,#2a2226cc,#1d1719b3 45%,#2a2226cc);-webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%);border:1px solid #ffffff40;box-shadow:inset 0 1px 0 #ffffff80,inset 0 -1px 0 #ffffff14,inset 0 0 14px #ffffff12,0 8px 24px #0008;color:var(--cream);font-size:12px;padding:4px}
 #res button{display:flex;gap:8px;align-items:center;width:100%;background:none;border:0;color:inherit;text-align:left;padding:4px;cursor:pointer;font:inherit}
 #res .label{padding:6px 6px 2px;font-size:11px;opacity:.6}
 #res img{width:48px;height:36px;object-fit:cover;border-radius:4px;flex:none}
 #ytp{position:absolute;left:0;top:0;width:200px;height:200px;opacity:0;pointer-events:none;z-index:-1}
-#add{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);z-index:3;width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:24px;line-height:1;color:var(--cream);background:#1d1719cc;border:0;border-radius:50%;cursor:pointer;padding:0 0 2px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
-#view{flex:1;min-height:0;background:var(--cream);display:flex;align-items:center;justify-content:center;position:relative}
+#view{flex:1;min-height:0;margin-top:calc(var(--W)*-.195);background:var(--cream);display:flex;align-items:center;justify-content:center;position:relative}
 #view>.slide{will-change:opacity;position:absolute;inset:0;overflow:hidden;background:var(--cream);opacity:0;transition:opacity 1.8s ease-in-out}
 #view>.show{opacity:1}
 .slide>*{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 @media (prefers-reduced-motion:reduce){#view>.slide{transition:none}}
 [hidden]{display:none!important}
-#play,#save,#reset{opacity:.6;position:absolute;left:50%;bottom:24px;transform:translateX(-50%);z-index:3;width:52px;height:52px;display:flex;align-items:center;justify-content:center;padding:0;border-radius:50%;cursor:pointer;color:#fff;background:linear-gradient(135deg,#ffffff4d,#ffffff14);-webkit-backdrop-filter:blur(16px) saturate(170%);backdrop-filter:blur(16px) saturate(170%);border:1px solid #ffffff59;box-shadow:inset 0 1px 0 #ffffff99,inset 0 -1px 0 #ffffff26,0 6px 18px #0005}
+#play,#add,#theme,#reset{opacity:.6;position:absolute;left:50%;bottom:24px;transform:translateX(-50%);z-index:3;width:52px;height:52px;display:flex;align-items:center;justify-content:center;padding:0;border-radius:50%;cursor:pointer;color:#fff;background:linear-gradient(135deg,#ffffff4d,#ffffff14);-webkit-backdrop-filter:blur(16px) saturate(170%);backdrop-filter:blur(16px) saturate(170%);border:1px solid #ffffff59;box-shadow:inset 0 1px 0 #ffffff99,inset 0 -1px 0 #ffffff26,0 6px 18px #0005}
 #play svg{width:24px;height:24px;fill:currentColor}
-#play{width:56px;height:56px}
-#save,#reset{width:44px;height:44px;bottom:30px;transform:none}
-#save{left:calc(50% - 90px)}
+#play,#add{width:56px;height:56px}
+#add{font-size:28px;line-height:1;padding-bottom:3px}
+#theme,#reset{width:44px;height:44px;bottom:30px;transform:none}
+#theme{left:calc(50% - 90px);background:var(--next);-webkit-backdrop-filter:none;backdrop-filter:none;border:2px solid #fffc;box-shadow:0 2px 8px #0005}   /* 누르면 적용될 다음 테마의 대표 색만 보임 */
 #reset{left:calc(50% + 46px)}
-#save svg,#reset svg{width:24px;height:24px}
-#save span{display:none;font-size:13px;font-weight:600}
-#save.busy svg,#save.ready svg{display:none}
-#save.busy span,#save.ready span{display:inline}
+#reset svg{width:24px;height:24px}
 #empty{color:var(--ink);font-size:14px;text-align:center;padding:20px}
 </style>
 </head>
@@ -76,7 +73,7 @@ button,input{font-family:inherit}
       <div id="ytp"></div>
     </div>
   </div>
-  <div id="view"><div id="empty">+ 버튼이나 빈 원을 눌러<br>사진·영상을 넣어보세요 (최대 20개)</div><button id="add" aria-label="사진·영상 추가">+</button><button id="play" aria-label="슬라이드쇼 재생/정지" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button><button id="reset" aria-label="처음으로 되돌리기" hidden><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5.07167 8C5.80935 6.72229 6.88601 5.67345 8.1826 4.96946C9.47919 4.26547 10.9452 3.93375 12.4186 4.01097C13.8919 4.08818 15.3152 4.57133 16.5311 5.40699C17.747 6.24266 18.7081 7.39828 19.3082 8.74611M3.23169 5.51537L3.9611 8.6749C4.08534 9.21303 4.62229 9.54856 5.16042 9.42433L8.31996 8.69492M18.9281 15.9999C18.1904 17.2776 17.1138 18.3264 15.8172 19.0304C14.5206 19.7344 13.0546 20.0661 11.5812 19.9889C10.1079 19.9117 8.68456 19.4286 7.46866 18.5929C6.25276 17.7572 5.29164 16.6016 4.69155 15.2538M20.7681 18.4845L20.0387 15.325C19.9144 14.7869 19.3775 14.4513 18.8394 14.5756L15.6798 15.305" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button><button id="save" class="" aria-label="화면 녹화로 저장 (컴퓨터 전용)" hidden><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 8L7 8C4.79086 8 3 9.79086 3 12L3 17C3 19.2091 4.79086 21 7 21L19 21C21.2091 21 23 19.2091 23 17L23 12C23 9.79086 21.2091 8 19 8L17 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M10 13L12.2929 15.2929C12.6834 15.6834 13.3166 15.6834 13.7071 15.2929L16 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M13 15L13 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span></span></button></div>
+  <div id="view"><div id="empty">+ 버튼이나 빈 원을 눌러<br>사진·영상을 넣어보세요 (최대 20개)</div><button id="add" aria-label="사진·영상 추가">+</button><button id="play" aria-label="슬라이드쇼 재생/정지" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button><button id="reset" aria-label="처음으로 되돌리기" hidden><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5.07167 8C5.80935 6.72229 6.88601 5.67345 8.1826 4.96946C9.47919 4.26547 10.9452 3.93375 12.4186 4.01097C13.8919 4.08818 15.3152 4.57133 16.5311 5.40699C17.747 6.24266 18.7081 7.39828 19.3082 8.74611M3.23169 5.51537L3.9611 8.6749C4.08534 9.21303 4.62229 9.54856 5.16042 9.42433L8.31996 8.69492M18.9281 15.9999C18.1904 17.2776 17.1138 18.3264 15.8172 19.0304C14.5206 19.7344 13.0546 20.0661 11.5812 19.9889C10.1079 19.9117 8.68456 19.4286 7.46866 18.5929C6.25276 17.7572 5.29164 16.6016 4.69155 15.2538M20.7681 18.4845L20.0387 15.325C19.9144 14.7869 19.3775 14.4513 18.8394 14.5756L15.6798 15.305" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button><button id="theme" aria-label="테마 색 바꾸기"></button></div>
 </div>
 
 <script>
@@ -152,11 +149,11 @@ function layout(){
   assign(rot,true); apply();
 }
 let slide=false, timer=0;
-const next=()=>{if(finishRec&&sel===items.length-1)setTimeout(finishRec,500);else show((sel+1)%items.length)};
+const next=()=>show((sel+1)%items.length);
 let showId=0;
 async function show(i){
   sel=i; clearTimeout(timer); const my=++showId;
-  $('empty').style.display=items.length?'none':''; $('add').hidden=items.length>0; $('play').hidden=$('reset').hidden=!items.length; $('save').hidden=!items.length||!CAN_REC;
+  $('empty').style.display=items.length?'none':''; $('add').hidden=items.length>0; $('play').hidden=$('reset').hidden=!items.length;
   const it=items[i], box=document.createElement('div'); box.className='slide';
   const m=document.createElement(it.video?'video':'img'); m.src=it.url; m.alt='';
   if(it.video){
@@ -177,44 +174,32 @@ $('play').onclick=()=>{
   slide=!slide; clearTimeout(timer); setPlayIcon(slide);
   if(slide&&!items[sel].video)timer=setTimeout(next,4000);
 };
-/* ---------- 화면 녹화로 저장 (컴퓨터 Chrome/Edge 전용: 탭 소리까지 담김) ---------- */
-const CAN_REC=!!(navigator.mediaDevices&&navigator.mediaDevices.getDisplayMedia);
-let saving=false, finishRec=null;
-const setSave=(cls,txt='')=>{$('save').className=cls;$('save').querySelector('span').textContent=txt};
 const setPlayIcon=on=>$('play').querySelector('path').setAttribute('d',on?'M6 5h4v14H6zM14 5h4v14h-4z':'M8 5v14l11-7z');
-$('save').onclick=async()=>{
-  if(finishRec){finishRec();return}   // 녹화 중에 누르면 거기서 종료
-  let stream;
-  try{stream=await navigator.mediaDevices.getDisplayMedia({video:{frameRate:30},audio:true,preferCurrentTab:true,selfBrowserSurface:'include',systemAudio:'include'})}
-  catch(e){if(e.name!=='NotAllowedError')alert('화면 녹화를 시작할 수 없어요: '+e.name+' '+e.message);return}   // NotAllowedError = 공유 창에서 취소(또는 권한 거부)
-  // 소리 트랙이 없으면(탭 오디오 공유를 안 켰거나 '창/전체 화면'을 고른 경우) 무음으로 저장되므로 미리 알림
-  if(!stream.getAudioTracks().length&&!confirm("소리가 함께 공유되지 않았어요.\n공유 창에서 'Chrome 탭'을 고르고 '탭 오디오도 공유'를 켜야 음악이 담겨요.\n\n소리 없이 계속 녹화할까요?")){stream.getTracks().forEach(t=>t.stop());return}
-  try{const t=stream.getVideoTracks()[0];if(window.CropTarget)await t.cropTo(await CropTarget.fromElement($('app')))}catch{}   // 앱 영역만 (지원 안 하면 탭 전체)
-  // 소리까지 안정적으로 담기도록 webm 우선, 지원 안 하면 mp4 (Safari)
-  const mime=['video/webm;codecs=vp9,opus','video/webm','video/mp4'].find(t=>MediaRecorder.isTypeSupported(t))||'';
-  let rec; const chunks=[];
-  try{rec=new MediaRecorder(stream,mime?{mimeType:mime,videoBitsPerSecond:6e6}:{})}catch(e){stream.getTracks().forEach(t=>t.stop());alert('녹화를 시작하지 못했어요: '+e.message);return}
-  rec.ondataavailable=e=>e.data.size&&chunks.push(e.data);
-  rec.onstop=()=>{
-    stream.getTracks().forEach(t=>t.stop()); finishRec=null; saving=false; setSave('');
-    const type=(mime||'video/webm').split(';')[0], a=document.createElement('a');
-    a.href=URL.createObjectURL(new Blob(chunks,{type})); a.download='photoLP.'+(type.includes('mp4')?'mp4':'webm'); a.click();
-    setTimeout(()=>URL.revokeObjectURL(a.href),1e4);
-  };
-  finishRec=()=>{if(rec.state==='recording'){slide=false;clearTimeout(timer);setPlayIcon(false);rec.stop()}};
-  stream.getVideoTracks()[0].onended=finishRec;   // 브라우저의 '공유 중지'를 눌러도 저장
-  rec.onerror=e=>{alert('녹화 중 오류가 났어요: '+(e.error&&e.error.message||''));finishRec&&finishRec()};
-  saving=true; setSave('busy','REC');
-  try{rec.start()}catch(e){stream.getTracks().forEach(t=>t.stop());saving=false;setSave('');finishRec=null;alert('녹화를 시작하지 못했어요: '+e.message);return}
-  slide=true; setPlayIcon(true); show(0);          // 처음부터 한 바퀴 자동 재생, 마지막 장이 끝나면 next()가 녹화를 끝냄
-};
+/* ---------- 테마: [LP, 바탕, 빈 원·강조, 곡 제목, 바탕 위 글자, LP 홈] ---------- */
+const THEMES=[
+  ['#1d1719','#e9dcc8','#e9dcc8','#6e5846','#8a6e52','#ffffff0f'],     // 기본
+  ['#76220b','#fff9f2','#fff9f2','#fff9f2b3','#000000','#ffffff14'],   // #76220b · #fff9f2 · #000000
+  ['#33471d','#f6e5d0','#a4a494','#f6e5d0b3','#33471d','#ffffff12'],   // #33471d · #a4a494 · #f6e5d0
+  ['#3e6394','#ebd8c1','#ebd8c1','#ebd8c1cc','#af7b4c','#ffffff14'],   // #3e6394 · #ebd8c1 · #af7b4c
+  ['#aed1ff','#ebe4e1','#747474','#747474','#747474','#0000000f'],     // #aed1ff · #ebe4e1 · #747474
+  ['#000000','#ffffff','#e1e1e1','#e1e1e1b3','#000000','#ffffff14'],   // #000000 · #e1e1e1 · #ffffff
+  ['#003274','#ffffff','#a27751','#ffffffb3','#003274','#ffffff12'],   // #003274 · #ffffff · #a27751
+];
+let theme=0;
+function setTheme(n){
+  theme=((n%THEMES.length)+THEMES.length)%THEMES.length;
+  const st=document.documentElement.style;
+  ['--bg','--cream','--dot','--title','--ink','--groove'].forEach((k,i)=>st.setProperty(k,THEMES[theme][i]));
+  st.setProperty('--next',THEMES[(theme+1)%THEMES.length][0]);
+}
+$('theme').onclick=()=>setTheme(theme+1);
 // 사진·영상을 모두 지우고 빈 화면으로 (되돌릴 수 없어서 확인을 받음)
 $('reset').onclick=()=>{
-  if(saving||!confirm('넣은 사진·영상을 모두 지우고 처음으로 돌아갈까요?'))return;
-  clearTimeout(timer); slide=false; setPlayIcon(false);
+  if(!confirm('넣은 사진·영상을 모두 지우고 처음으로 돌아갈까요?'))return;
+  clearTimeout(timer); slide=false; setPlayIcon(false); setTheme(0);   // 테마도 기본(브라운)으로
   items.forEach(it=>[it.url,it.thumb].forEach(u=>u&&URL.revokeObjectURL(u))); items=[]; sel=-1; pick=-1; showId++;
   view.querySelectorAll('.slide').forEach(e=>e.remove());
-  $('empty').style.display=''; $('add').hidden=false; $('play').hidden=$('save').hidden=$('reset').hidden=true;
+  $('empty').style.display=''; $('add').hidden=false; $('play').hidden=$('reset').hidden=true;
   layout();
 };
 $('add').onclick=()=>$('file').click();
