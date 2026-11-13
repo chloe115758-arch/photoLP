@@ -34,6 +34,7 @@
 - 영상으로 남기려면 기기의 화면 기록 기능을 쓰세요.
 - 일부 곡은 YouTube 밖에서 재생이 막혀 있습니다. 그럴 때는 검색 결과에서 다른 영상을 고르세요.
 - 곡 검색은 하루 약 100번까지 됩니다. 같은 검색어는 30일 동안 저장된 결과를 쓰고, YouTube 링크를 붙여넣는 것은 횟수에 포함되지 않습니다.
+- 하루 검색 횟수를 넘기면 그날은 YouTube 대신 30초 미리듣기(iTunes 검색)로 곡을 들려줍니다.
 
 ## 내 컴퓨터에서 실행하기
 
@@ -62,5 +63,6 @@ python3 -m http.server 8000
 
 - HTML, CSS, JavaScript (빌드 도구와 프레임워크 없음)
 - [YouTube IFrame Player API](https://developers.google.com/youtube/iframe_api_reference), [YouTube Data API v3](https://developers.google.com/youtube/v3)
+- [iTunes Search API](https://performance-partners.apple.com/search-api) (YouTube 검색을 쓸 수 없을 때의 30초 미리듣기)
 - [heic-to](https://github.com/hoppergee/heic-to) (HEIC 사진 변환)
 - [Pretendard](https://github.com/orioncactus/pretendard) (글꼴)

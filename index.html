@@ -296,6 +296,7 @@ window.onYouTubeIframeAPIReady=()=>{
     // 재생 실패 이유를 제목 자리에 표시
     onError:e=>{$('title').textContent=({2:'잘못된 영상 주소예요',5:'이 브라우저에서 재생할 수 없어요',100:'삭제됐거나 비공개인 영상이에요',101:'외부 재생이 막힌 영상이에요. 다른 결과를 골라주세요',150:'외부 재생이 막힌 영상이에요. 다른 결과를 골라주세요',153:'http://localhost 주소로 열어야 재생돼요'})[e.data]||'재생 오류 ('+e.data+')'},
     onStateChange:e=>{
+      if(src!=='yt')return;   // 미리듣기 재생 중에는 YouTube 플레이어 상태를 무시
       $('title').classList.toggle('paused',e.data===2);
       playing=e.data===1;
       const d=yt.getVideoData&&yt.getVideoData(); if(d&&d.title)$('title').textContent=clip(d.title);
@@ -321,7 +322,17 @@ function parse(u){
     return {v,list};
   }catch{return null}
 }
+// 30초 미리듣기(오디오 파일) 재생기. 끝나면 반복
+const au=new Audio(); au.loop=true; let src='yt', cur='';
+au.onplay=au.onpause=()=>{if(src!=='au')return; playing=!au.paused; $('title').classList.toggle('paused',au.paused)};
+au.onerror=()=>{if(src==='au')$('title').textContent='미리듣기를 재생할 수 없어요'};
+function playPreview(it){
+  if(yt&&yt.pauseVideo)yt.pauseVideo(); pending=null;
+  src='au'; au.src=it.a; cur=it.title; $('title').textContent=clip(cur);
+  au.play().catch(()=>{$('title').textContent='제목을 눌러 재생하세요'});
+}
 function load(p){
+  au.pause(); src='yt';
   if(!yt||!yt.loadVideoById){pending=p;return}
   if(p.list) yt.loadPlaylist({list:p.list,listType:'playlist',index:0}); else yt.loadVideoById(p.v);
 }
@@ -330,20 +341,52 @@ $('yt').onsubmit=async e=>{
   const q=$('url').value.trim(); if(!q)return;
   const p=/^https?:\/\//.test(q)&&parse(q);
   if(p&&(p.v||p.list)){closeSearch();load(p);return}
-  if(!YT_KEY){alert('링크를 붙여넣거나, 파일 위쪽 YT_KEY에 API 키를 넣어주세요');return}
-  const key=q.toLowerCase().replace(/\s+/g,' '), cache=jget('lpSearch',{}), hit=cache[key];
-  if(hit&&Date.now()-hit.t<30*864e5){render(hit.r);return}   // 같은 검색어는 30일간 저장해 둔 결과를 사용 → API 호출 0
+  const key=q.toLowerCase().replace(/\s+/g,' '), cache=jget('lpSearch3',{}), fresh=h=>h&&Date.now()-h.t<30*864e5;
+  if(fresh(cache[key])){render(cache[key].r);return}   // 같은 검색어는 30일간 저장해 둔 결과를 사용 → API 호출 0
+  const keep=(k,list)=>{
+    cache[k]={t:Date.now(),r:list};
+    const keys=Object.keys(cache).sort((x,y)=>cache[x].t-cache[y].t); while(keys.length>50)delete cache[keys.shift()];   // 최근 검색어 50개까지만 보관
+    jset('lpSearch3',cache);
+  };
   res.style.display='block';res.textContent='검색 중…';
   try{
-    const r=await fetch('https://www.googleapis.com/youtube/v3/search?'+new URLSearchParams({part:'snippet',type:'video',videoEmbeddable:'true',videoSyndicated:'true',maxResults:8,q,key:YT_KEY}));
+    if(!YT_KEY)throw new Error('no key');
+    const r=await fetch('https://www.googleapis.com/youtube/v3/search?'+new URLSearchParams({part:'snippet',type:'video',videoEmbeddable:'true',videoSyndicated:'true',videoCategoryId:'10',maxResults:20,q,key:YT_KEY}));
     const j=await r.json(); if(j.error)throw new Error(j.error.message);
     const t=document.createElement('textarea');   // HTML 엔티티 해제용
-    const list=j.items.map(it=>{t.innerHTML=it.snippet.title;return {v:it.id.videoId,title:t.value+' · '+it.snippet.channelTitle,thumb:it.snippet.thumbnails.default.url}});
-    cache[key]={t:Date.now(),r:list};
-    const keys=Object.keys(cache).sort((x,y)=>cache[x].t-cache[y].t); while(keys.length>50)delete cache[keys.shift()];   // 최근 검색어 50개까지만 보관
-    jset('lpSearch',cache); render(list);
-  }catch(err){res.textContent='검색 실패: '+err.message}
+    // 영상 길이 조회(1유닛): 쇼츠·릴스처럼 짧은 영상을 걸러내는 데 사용. 실패해도 검색은 계속
+    const dur={};
+    try{
+      const d=await (await fetch('https://www.googleapis.com/youtube/v3/videos?'+new URLSearchParams({part:'contentDetails',id:j.items.map(it=>it.id.videoId).join(','),key:YT_KEY}))).json();
+      (d.items||[]).forEach(v=>{const m=/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/.exec(v.contentDetails.duration)||[]; dur[v.id]=(+m[1]||0)*3600+(+m[2]||0)*60+(+m[3]||0)});
+    }catch{}
+    const list=official(j.items.map(it=>{t.innerHTML=it.snippet.title;return {v:it.id.videoId,title:t.value+' · '+it.snippet.channelTitle,thumb:it.snippet.thumbnails.default.url,name:t.value,ch:it.snippet.channelTitle,dur:dur[it.id.videoId]}}),q)
+      .map(({v,title,thumb})=>({v,title,thumb}));
+    keep(key,list); render(list);
+  }catch{
+    // YouTube 검색이 안 될 때(하루 한도 초과 등): 키·한도 없는 iTunes 검색으로 30초 미리듣기를 대신 제공
+    const LABEL='YouTube 검색을 쓸 수 없어 30초 미리듣기로 보여드려요', ik='it:'+key;
+    if(fresh(cache[ik])){render(cache[ik].r,LABEL);return}
+    try{
+      const j=await (await fetch('https://itunes.apple.com/search?'+new URLSearchParams({term:q,media:'music',entity:'song',limit:8}))).json();
+      const list=j.results.filter(x=>x.previewUrl).map(x=>({a:x.previewUrl,title:x.trackName+' · '+x.artistName,thumb:x.artworkUrl60}));
+      keep(ik,list); render(list,LABEL);
+    }catch(err){res.textContent='검색 실패: '+err.message}
+  }
 };
+// 공식 음원 위주로 정리: 커버·라이브·뮤직비디오 등은 빼고(검색어에 그 말이 있으면 유지), 공식 음원 채널('… - Topic')과 'Official Audio'를 맨 위로
+// 제목·채널명으로 추측하는 방식이라 완벽하지 않음. 걸러서 하나도 안 남으면 원래 결과를 그대로 씀
+const SKIP=['cover','커버','live','라이브','m/v','mv','music video','뮤직비디오','reaction','리액션','karaoke','노래방','fancam','직캠','teaser','티저','dance practice','안무','inst','instrumental','tutorial','fmv','원곡','1시간','멜로디제거',
+  '가사','lyrics','lyric','shorts','쇼츠','릴스','reels',                                            // 가사 영상, 쇼츠·릴스
+  '방송','무대','콘서트','concert','stage','performance','스케치북','인기가요','뮤직뱅크','음악중심','엠카','킬링보이스'];   // 방송·공연 녹화
+const TV=/(^|[^a-z])(kbs|mbc|sbs|mnet|jtbc|tvn|ebs|arirang)/i;   // 방송사 채널
+function official(list,q){
+  const ql=q.toLowerCase(), skip=SKIP.filter(w=>!ql.includes(w));
+  const bad=x=>{const n=x.name.toLowerCase();return /(^|[^A-Za-z])MR(?![A-Za-z.])/.test(x.name)||TV.test(x.ch)||x.dur<90||x.dur>900||skip.some(w=>/^[a-z/ ]+$/.test(w)?new RegExp('(^|[^a-z])'+w.replace('/','\\/?')+'($|[^a-z])').test(n):n.includes(w))};
+  const rank=x=>/ - topic$/i.test(x.ch)?0:/official audio|audio|음원/i.test(x.name)?1:2;
+  const kept=list.filter(x=>!bad(x));
+  return (kept.length?kept:list).map((x,i)=>[rank(x),i,x]).sort((a,b)=>a[0]-b[0]||a[1]-b[1]).map(a=>a[2]).slice(0,8);
+}
 // 브라우저 저장소(localStorage). 사생활 보호 모드 등에서 막혀 있어도 검색은 동작하도록 예외 무시
 function jget(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch{return d}}
 function jset(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
@@ -356,7 +399,7 @@ function render(list,label){
     im.src=it.thumb; im.alt=''; sp.textContent=it.title; b.append(im,sp);
     b.onclick=()=>{
       jset('lpRecent',[it,...jget('lpRecent',[]).filter(x=>x.v!==it.v)].slice(0,10));   // 최근 재생 10곡: 다시 검색하지 않고 바로 재생
-      closeSearch(); load({v:it.v});
+      closeSearch(); it.a?playPreview(it):load({v:it.v});
     };
     res.append(b);
   });
@@ -368,7 +411,10 @@ $('hole').onclick=()=>{$('yt').classList.add('open');$('url').focus();showRecent
 addEventListener('pointerdown',e=>{if(!e.target.closest('#res,#yt,#hole'))closeSearch()});
 addEventListener('keydown',e=>{if(e.key==='Escape')closeSearch()});
 // 버튼 없이 제목을 누르면 재생/일시정지
-$('title').onclick=()=>{if(!yt||!yt.getPlayerState)return;yt.getPlayerState()===1?yt.pauseVideo():yt.playVideo()};
+$('title').onclick=()=>{
+  if(src==='au'){au.paused?au.play().then(()=>$('title').textContent=clip(cur)).catch(()=>{}):au.pause();return}
+  if(!yt||!yt.getPlayerState)return;yt.getPlayerState()===1?yt.pauseVideo():yt.playVideo()
+};
 </script>
 </body>
 </html>
