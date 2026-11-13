@@ -33,6 +33,7 @@ button,input{font-family:inherit}
 #yt input{-webkit-appearance:none;appearance:none;width:100%;height:44px;border:0;border-radius:99px;color:var(--cream);font-size:16px;font-weight:500;padding:0 16px 0 44px;-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);box-shadow:inset 0 2px 4px #0009,inset 0 -1px 0 #ffffff40,0 1px 0 #ffffff14;background:#e9dcc81f url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23e9dcc8' stroke-opacity='.6' stroke-width='2.2' stroke-linecap='round' d='M10.5 4a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zM15.5 15.5 20 20'/%3E%3C/svg%3E") 16px 50%/19px no-repeat}
 #res{display:none;position:absolute;z-index:5;left:12px;right:12px;top:60px;max-height:calc(var(--W)*.6);overflow:auto;border-radius:16px;background:linear-gradient(135deg,#2a2226cc,#1d1719b3 45%,#2a2226cc);-webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%);border:1px solid #ffffff40;box-shadow:inset 0 1px 0 #ffffff80,inset 0 -1px 0 #ffffff14,inset 0 0 14px #ffffff12,0 8px 24px #0008;color:var(--cream);font-size:12px;padding:4px}
 #res button{display:flex;gap:8px;align-items:center;width:100%;background:none;border:0;color:inherit;text-align:left;padding:4px;cursor:pointer;font:inherit}
+#res .label{padding:6px 6px 2px;font-size:11px;opacity:.6}
 #res img{width:48px;height:36px;object-fit:cover;border-radius:4px;flex:none}
 #ytp{position:absolute;left:0;top:0;width:200px;height:200px;opacity:0;pointer-events:none;z-index:-1}
 #add{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);z-index:3;width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:24px;line-height:1;color:var(--cream);background:#1d1719cc;border:0;border-radius:50%;cursor:pointer;padding:0 0 2px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
@@ -345,24 +346,40 @@ $('yt').onsubmit=async e=>{
   const p=/^https?:\/\//.test(q)&&parse(q);
   if(p&&(p.v||p.list)){closeSearch();load(p);return}
   if(!YT_KEY){alert('링크를 붙여넣거나, 파일 위쪽 YT_KEY에 API 키를 넣어주세요');return}
+  const key=q.toLowerCase().replace(/\s+/g,' '), cache=jget('lpSearch',{}), hit=cache[key];
+  if(hit&&Date.now()-hit.t<30*864e5){render(hit.r);return}   // 같은 검색어는 30일간 저장해 둔 결과를 사용 → API 호출 0
   res.style.display='block';res.textContent='검색 중…';
   try{
     const r=await fetch('https://www.googleapis.com/youtube/v3/search?'+new URLSearchParams({part:'snippet',type:'video',videoEmbeddable:'true',videoSyndicated:'true',maxResults:8,q,key:YT_KEY}));
     const j=await r.json(); if(j.error)throw new Error(j.error.message);
-    res.textContent='';
-    j.items.forEach(it=>{
-      const b=document.createElement('button'),s=it.snippet;
-      const t=document.createElement('textarea');t.innerHTML=s.title;   // HTML 엔티티 해제
-      b.innerHTML='<img src="'+s.thumbnails.default.url+'"><span></span>';
-      b.lastChild.textContent=t.value+' · '+s.channelTitle;
-      b.onclick=()=>{closeSearch();load({v:it.id.videoId})};
-      res.append(b);
-    });
-    if(!j.items.length)res.textContent='결과가 없어요';
+    const t=document.createElement('textarea');   // HTML 엔티티 해제용
+    const list=j.items.map(it=>{t.innerHTML=it.snippet.title;return {v:it.id.videoId,title:t.value+' · '+it.snippet.channelTitle,thumb:it.snippet.thumbnails.default.url}});
+    cache[key]={t:Date.now(),r:list};
+    const keys=Object.keys(cache).sort((x,y)=>cache[x].t-cache[y].t); while(keys.length>50)delete cache[keys.shift()];   // 최근 검색어 50개까지만 보관
+    jset('lpSearch',cache); render(list);
   }catch(err){res.textContent='검색 실패: '+err.message}
 };
+// 브라우저 저장소(localStorage). 사생활 보호 모드 등에서 막혀 있어도 검색은 동작하도록 예외 무시
+function jget(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch{return d}}
+function jset(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
+function render(list,label){
+  res.style.display='block'; res.textContent='';
+  if(!list.length){res.textContent='결과가 없어요';return}
+  if(label){const h=document.createElement('div');h.className='label';h.textContent=label;res.append(h)}
+  list.forEach(it=>{
+    const b=document.createElement('button'), im=document.createElement('img'), sp=document.createElement('span');
+    im.src=it.thumb; im.alt=''; sp.textContent=it.title; b.append(im,sp);
+    b.onclick=()=>{
+      jset('lpRecent',[it,...jget('lpRecent',[]).filter(x=>x.v!==it.v)].slice(0,10));   // 최근 재생 10곡: 다시 검색하지 않고 바로 재생
+      closeSearch(); load({v:it.v});
+    };
+    res.append(b);
+  });
+}
+const showRecent=()=>{const rc=jget('lpRecent',[]); if(rc.length&&!$('url').value.trim())render(rc,'최근 재생'); else if(!$('url').value.trim())res.style.display='none'};
+$('url').oninput=showRecent;
 const closeSearch=()=>{res.style.display='none';$('yt').classList.remove('open')};
-$('hole').onclick=()=>{$('yt').classList.add('open');$('url').focus()};
+$('hole').onclick=()=>{$('yt').classList.add('open');$('url').focus();showRecent()};
 addEventListener('pointerdown',e=>{if(!e.target.closest('#res,#yt,#hole'))closeSearch()});
 addEventListener('keydown',e=>{if(e.key==='Escape')closeSearch()});
 // 버튼 없이 제목을 누르면 재생/일시정지
